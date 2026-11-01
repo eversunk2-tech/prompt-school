@@ -76,7 +76,9 @@ def main():
     OUT.parent.mkdir(parents=True, exist_ok=True)
     ver_file = SRC / 'VERSION'
     version = int(ver_file.read_text().strip()) if ver_file.exists() else 1
-    OUT.write_text(json.dumps({'version': version, 'categories': cats}, ensure_ascii=False, indent=1), encoding='utf-8')
+    rm_file = SRC / 'REMOVE'  # 사이트 DB에서도 지울 예전 항목 아이디(한 줄에 하나)
+    remove = [x.strip() for x in rm_file.read_text(encoding='utf-8').splitlines() if x.strip()] if rm_file.exists() else []
+    OUT.write_text(json.dumps({'version': version, 'remove': remove, 'categories': cats}, ensure_ascii=False, indent=1), encoding='utf-8')
     ex = sum(1 for c in cats for it in c['items'] if it['kind'] == 'example')
     print(f'버전 {version}: {len(cats)}개 탭, {len(ids)}개 프롬프트(실제 사례 {ex}, 템플릿 {len(ids) - ex}) → {OUT.relative_to(ROOT)}')
 

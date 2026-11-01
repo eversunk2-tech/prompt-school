@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>프롬프트 학교 관리자</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow"><a href="/">← 사이트로</a></p>
+    <h1 class="title">관리자 <span class="hl">모드</span></h1>
+    <p class="lead">여기서 저장하면 사이트에 바로 반영됩니다. 코드 수정이나 커밋은 필요 없습니다.</p>
+  </header>
+
+  <section id="login" class="panel login" hidden>
+    <h3>비밀번호</h3>
+    <form id="loginForm" class="row">
+      <input id="pw" type="password" class="search" autocomplete="current-password" placeholder="관리자 비밀번호" aria-label="관리자 비밀번호" style="border-radius:10px">
+      <button class="btn primary" type="submit">들어가기</button>
+    </form>
+    <p class="muted" id="loginMsg"></p>
+  </section>
+
+  <section id="app" hidden>
+    <div class="row" style="margin-bottom:14px">
+      <button class="btn" id="newCat">+ 새 탭</button>
+      <button class="btn" id="seedMerge" title="저장소의 data/seed.json에 새로 추가된 항목만 가져옵니다">seed.json 새 항목 가져오기</button>
+      <button class="btn" id="exportBtn">백업 내려받기(JSON)</button>
+      <label class="btn" for="importFile" style="display:inline-block">백업으로 전체 복원</label>
+      <input type="file" id="importFile" accept="application/json" hidden>
+      <span style="flex:1"></span>
+      <button class="btn" id="logout">나가기</button>
+    </div>
+    <div class="admin-grid">
+      <aside class="panel">
+        <h3>탭(분류)</h3>
+        <ul class="list" id="catList"></ul>
+      </aside>
+      <div style="display:grid;gap:16px">
+        <section class="panel" id="catEditor"></section>
+        <section class="panel" id="itemArea"></section>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="module">
+import { esc, highlight, toast, GROUPS } from '/assets/common.js';
+
+const $ = (s) => document.querySelector(s);
+let KEY = '';
+try { KEY = sessionStorage.getItem('ps.key') || ''; } catch (e) {}
+const st = { data: null, cat: '', item: '', dirty: false };
+
+async function api(path, method = 'GET', body) {
+  const r = await fetch(path, {
+    method,
+    headers: { 'content-type': 'application/json', 'x-admin-key': KEY },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `오류 ${r.status}`);
+  return j;
+}
+
+async function reload(keep = true) {
+  st.data = await api('/api/data');
+  if (!keep || !st.data.categories.find((c) => c.id === st.cat)) st.cat = st.data.categories[0]?.id || '';
+  const c = curCat();
+  if (!c || !c.items.find((i) => i.id === st.item)) st.item = '';
+  render();
+}
+const curCat = () => st.data.categories.find((c) => c.id === st.cat);
+const curItem = () => curCat()?.items.find((i) => i.id === st.item);
+
+function render() {
+  $('#catList').innerHTML = st.data.categories.map((c, i) => `
+    <li class="item-li">
+      <button class="sel" data-cat="${esc(c.id)}" aria-current="${c.id === st.cat}">${esc(c.label)} <span class="muted">${esc(GROUPS[c.grp] || c.grp)} · ${c.items.length}</span></button>
+      <button class="btn mini" data-catmove="${i}:-1" aria-label="위로" ${i === 0 ? 'disabled' : ''}>↑</button>
+      <button class="btn mini" data-catmove="${i}:1" aria-label="아래로" ${i === st.data.categories.length - 1 ? 'disabled' : ''}>↓</button>
+    </li>`).join('');
+  renderCat();
+  renderItems();
+}
+
+function renderCat() {
+  const c = curCat();
+  if (!c) { $('#catEditor').innerHTML = '<p class="muted">왼쪽에서 탭을 고르거나 새 탭을 만드세요.</p>'; return; }
+  $('#catEditor').innerHTML = `
+    <h3>탭 정보</h3>
+    <div class="field"><label for="cLabel">탭 이름</label><input id="cLabel" value="${esc(c.label)}"></div>
+    <div class="field"><label for="cGrp">도구</label>
+      <select id="cGrp">${Object.entries(GROUPS).map(([k, v]) => `<option value="${k}" ${k === c.grp ? 'selected' : ''}>${v}</option>`).join('')}</select></div>
+    <div class="field"><label for="cIntro">소개 문장</label><input id="cIntro" value="${esc(c.intro)}"></div>
+    <div class="row"><button class="btn primary" id="saveCat">탭 저장</button><button class="btn danger" id="delCat">탭 삭제</button></div>`;
+}
+
+function renderItems() {
+  const c = curCat();
+  if (!c) { $('#itemArea').innerHTML = ''; return; }
+  const it = curItem();
+  $('#itemArea').innerHTML = `
+    <div class="row" style="justify-content:space-between"><h3 style="margin:0">프롬프트 (${c.items.length})</h3><button class="btn" id="newItem">+ 새 프롬프트</button></div>
+    <ul class="list" style="margin:10px 0 16px">${c.items.map((x, i) => `
+      <li class="item-li">
+        <button class="sel" data-item="${esc(x.id)}" aria-current="${x.id === st.item}">${esc(x.title)}</button>
+        <button class="btn mini" data-move="${i}:-1" aria-label="위로" ${i === 0 ? 'disabled' : ''}>↑</button>
+        <button class="btn mini" data-move="${i}:1" aria-label="아래로" ${i === c.items.length - 1 ? 'disabled' : ''}>↓</button>
+      </li>`).join('') || '<li class="muted">아직 없습니다.</li>'}</ul>
+    ${it || st.item === '__new' ? editor(it || { title: '', meta: '', text: '', check: '' }) : '<p class="muted">목록에서 프롬프트를 고르면 여기서 고칠 수 있습니다.</p>'}`;
+  if (it || st.item === '__new') updatePreview();
+}
+
+function editor(it) {
+  return `
+    <div class="field"><label for="iTitle">제목</label><input id="iTitle" value="${esc(it.title)}"></div>
+    <div class="field"><label for="iMeta">설명(어디에, 언제 쓰는지)</label><input id="iMeta" value="${esc(it.meta)}"></div>
+    <div class="field"><label for="iText">프롬프트 본문 <span class="muted">— #역할/#명령/#맥락/#형식, ##소제목, [자리표시]는 자동으로 색이 입혀집니다</span></label><textarea id="iText">${esc(it.text)}</textarea></div>
+    <div class="field"><label for="iCheck">확인할 것</label><input id="iCheck" value="${esc(it.check)}"></div>
+    <div class="field"><label for="iCat">탭 옮기기</label>
+      <select id="iCat">${st.data.categories.map((c) => `<option value="${esc(c.id)}" ${c.id === st.cat ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select></div>
+    <div class="row" style="margin-bottom:12px">
+      <button class="btn primary" id="saveItem">${st.item === '__new' ? '추가하기' : '저장 (Ctrl+S)'}</button>
+      ${st.item === '__new' ? '' : '<button class="btn danger" id="delItem">삭제</button>'}
+      <span class="muted" id="dirtyMsg"></span>
+    </div>
+    <p class="preview-label">미리보기</p>
+    <pre class="prompt" id="preview" style="margin:0"></pre>`;
+}
+
+function updatePreview() {
+  const p = $('#preview');
+  if (p) p.innerHTML = highlight($('#iText').value);
+}
+
+async function saveItem() {
+  const body = { title: $('#iTitle').value.trim(), meta: $('#iMeta').value.trim(), text: $('#iText').value, check: $('#iCheck').value.trim(), cat_id: $('#iCat').value };
+  if (!body.title) { toast('제목을 입력하세요'); return; }
+  try {
+    if (st.item === '__new') {
+      const r = await api('/api/items', 'POST', body);
+      st.item = r.id;
+    } else {
+      await api('/api/items/' + encodeURIComponent(st.item), 'PUT', body);
+    }
+    st.cat = body.cat_id;
+    st.dirty = false;
+    toast('저장했습니다. 사이트에 바로 반영됩니다.');
+    await reload();
+  } catch (e) { toast(e.message); }
+}
+
+async function swap(list, i, d, path) {
+  const a = list[i], b = list[i + d];
+  if (!a || !b) return;
+  let sa = a.sort ?? i * 10, sb = b.sort ?? (i + d) * 10;
+  if (sa === sb) { sa = (i + d) * 10; sb = i * 10; }
+  await api(path + encodeURIComponent(a.id), 'PUT', { sort: sb });
+  await api(path + encodeURIComponent(b.id), 'PUT', { sort: sa });
+  await reload();
+}
+
+function guard() {
+  return !st.dirty || confirmLeave();
+}
+function confirmLeave() {
+  // 브라우저 confirm 대화상자 대신 두 번 누르기 방식
+  if (st._warned) { st._warned = false; return true; }
+  st._warned = true;
+  toast('저장하지 않은 내용이 있습니다. 한 번 더 누르면 버리고 이동합니다.');
+  setTimeout(() => (st._warned = false), 3000);
+  return false;
+}
+
+document.addEventListener('click', async (e) => {
+  const t = e.target.closest('button, [data-cat], [data-item]');
+  if (!t) return;
+  try {
+    if (t.dataset.cat) { if (!guard()) return; st.cat = t.dataset.cat; st.item = ''; st.dirty = false; render(); }
+    else if (t.dataset.item) { if (!guard()) return; st.item = t.dataset.item; st.dirty = false; renderItems(); }
+    else if (t.dataset.catmove) { const [i, d] = t.dataset.catmove.split(':').map(Number); await swap(st.data.categories, i, d, '/api/categories/'); }
+    else if (t.dataset.move) { const [i, d] = t.dataset.move.split(':').map(Number); await swap(curCat().items, i, d, '/api/items/'); }
+    else if (t.id === 'newItem') { if (!guard()) return; st.item = '__new'; st.dirty = false; renderItems(); $('#iTitle').focus(); }
+    else if (t.id === 'saveItem') { await saveItem(); }
+    else if (t.id === 'delItem') {
+      if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = '정말 삭제? 한 번 더'; setTimeout(() => { t.dataset.sure = ''; t.textContent = '삭제'; }, 3000); return; }
+      await api('/api/items/' + encodeURIComponent(st.item), 'DELETE'); st.item = ''; st.dirty = false; toast('삭제했습니다'); await reload();
+    }
+    else if (t.id === 'saveCat') {
+      await api('/api/categories/' + encodeURIComponent(st.cat), 'PUT', { label: $('#cLabel').value.trim(), grp: $('#cGrp').value, intro: $('#cIntro').value.trim() });
+      toast('탭을 저장했습니다'); await reload();
+    }
+    else if (t.id === 'delCat') {
+      if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = '안의 프롬프트까지 모두 삭제? 한 번 더'; setTimeout(() => { t.dataset.sure = ''; t.textContent = '탭 삭제'; }, 3000); return; }
+      await api('/api/categories/' + encodeURIComponent(st.cat), 'DELETE'); toast('탭을 삭제했습니다'); await reload(false);
+    }
+    else if (t.id === 'newCat') {
+      const r = await api('/api/categories', 'POST', { label: '새 탭', grp: 'notebook', intro: '' });
+      st.cat = r.id; st.item = ''; await reload(); $('#cLabel').select();
+    }
+    else if (t.id === 'seedMerge') { await api('/api/import', 'POST', { source: 'seed', mode: 'merge' }); toast('seed.json의 새 항목을 가져왔습니다'); await reload(); }
+    else if (t.id === 'exportBtn') {
+      const blob = new Blob([JSON.stringify(st.data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `prompt-school-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+    else if (t.id === 'logout') { try { sessionStorage.removeItem('ps.key'); } catch (_) {} location.reload(); }
+  } catch (err) { toast(err.message); }
+});
+
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'iText') updatePreview();
+  if (['iTitle', 'iMeta', 'iText', 'iCheck'].includes(e.target.id)) { st.dirty = true; const m = $('#dirtyMsg'); if (m) m.textContent = '저장 안 됨'; }
+});
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's' && $('#saveItem')) { e.preventDefault(); saveItem(); }
+});
+
+$('#importFile').addEventListener('change', async (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    await api('/api/import', 'POST', { data, mode: 'replace' });
+    toast('백업으로 복원했습니다'); await reload(false);
+  } catch (err) { toast('복원 실패: ' + err.message); }
+  e.target.value = '';
+});
+
+window.addEventListener('beforeunload', (e) => { if (st.dirty) { e.preventDefault(); e.returnValue = ''; } });
+
+async function enter() {
+  try {
+    const r = await api('/api/login', 'POST');
+    try { sessionStorage.setItem('ps.key', KEY); } catch (_) {}
+    $('#login').hidden = true; $('#app').hidden = false;
+    if (!r.db) { $('#app').insertAdjacentHTML('afterbegin', '<p class="notice">D1 데이터베이스가 아직 연결되지 않았습니다. 연결해야 저장할 수 있습니다.</p>'); return; }
+    await reload(false);
+  } catch (e) {
+    $('#login').hidden = false; $('#app').hidden = true;
+    $('#loginMsg').textContent = KEY ? e.message : '';
+  }
+}
+
+$('#loginForm').addEventListener('submit', (e) => { e.preventDefault(); KEY = $('#pw').value; enter(); });
+enter();
+</script>
+</body>
+</html>

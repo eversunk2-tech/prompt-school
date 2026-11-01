@@ -24,21 +24,39 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS items (
      id TEXT PRIMARY KEY, cat_id TEXT NOT NULL, title TEXT NOT NULL,
      meta TEXT DEFAULT '', chk TEXT DEFAULT '', body TEXT DEFAULT '',
-     sort INTEGER DEFAULT 0, updated_at TEXT)`,
+     sort INTEGER DEFAULT 0, updated_at TEXT,
+     kind TEXT DEFAULT 'template', result TEXT DEFAULT '')`,
   `CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT)`,
 ];
 
 let ready = false;
 
+// 예전 표에 새 칸(kind: 템플릿/실제 사례, result: 실제 결과)이 없으면 추가
+async function migrate(env) {
+  const cols = await env.DB.prepare('PRAGMA table_info(items)').all();
+  const names = new Set(cols.results.map((c) => c.name));
+  const add = [];
+  if (!names.has('kind')) add.push(`ALTER TABLE items ADD COLUMN kind TEXT DEFAULT 'template'`);
+  if (!names.has('result')) add.push(`ALTER TABLE items ADD COLUMN result TEXT DEFAULT ''`);
+  if (add.length) await env.DB.batch(add.map((q) => env.DB.prepare(q)));
+}
+
 export async function ensureReady(env, request) {
   if (ready) return;
   await env.DB.batch(SCHEMA.map((s) => env.DB.prepare(s)));
+  await migrate(env);
+  // seed.json의 version이 올라가면 새 항목만 자동으로 더함(이미 있는 항목·관리자 수정 내용은 그대로)
+  const row = await env.DB.prepare(`SELECT v FROM settings WHERE k='seed_version'`).first();
   const seeded = await env.DB.prepare(`SELECT v FROM settings WHERE k='seeded'`).first();
-  if (!seeded) {
-    const seed = await loadSeed(env, request);
-    if (seed) await importData(env, seed, 'merge');
-    await env.DB.prepare(`INSERT OR REPLACE INTO settings (k, v) VALUES ('seeded', ?)`)
-      .bind(new Date().toISOString()).run();
+  const have = row ? Number(row.v) : (seeded ? 1 : 0);
+  const seed = await loadSeed(env, request);
+  const want = Number(seed?.version || 1);
+  if (seed && want > have) {
+    await importData(env, seed, 'merge');
+    await env.DB.batch([
+      env.DB.prepare(`INSERT OR REPLACE INTO settings (k, v) VALUES ('seed_version', ?)`).bind(String(want)),
+      env.DB.prepare(`INSERT OR REPLACE INTO settings (k, v) VALUES ('seeded', ?)`).bind(new Date().toISOString()),
+    ]);
   }
   ready = true;
 }
@@ -70,8 +88,9 @@ export async function importData(env, data, mode = 'merge') {
     );
     (c.items || []).forEach((it, ii) => {
       stmts.push(
-        env.DB.prepare(`${verb} INTO items (id, cat_id, title, meta, chk, body, sort, updated_at) VALUES (?,?,?,?,?,?,?,?)`)
-          .bind(it.id, c.id, it.title, it.meta || '', it.check || '', it.text || '', it.sort ?? ii * 10, now),
+        env.DB.prepare(`${verb} INTO items (id, cat_id, title, meta, chk, body, sort, updated_at, kind, result) VALUES (?,?,?,?,?,?,?,?,?,?)`)
+          .bind(it.id, c.id, it.title, it.meta || '', it.check || '', it.text || '', it.sort ?? ii * 10, now,
+            it.kind === 'example' ? 'example' : 'template', it.result || ''),
       );
     });
   });
@@ -88,6 +107,7 @@ export async function readAll(env) {
   for (const it of items.results) {
     (byCat[it.cat_id] ||= []).push({
       id: it.id, title: it.title, meta: it.meta, check: it.chk, text: it.body,
+      kind: it.kind === 'example' ? 'example' : 'template', result: it.result || '',
       sort: it.sort, updated_at: it.updated_at,
     });
   }

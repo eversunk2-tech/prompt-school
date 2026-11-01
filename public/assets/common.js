@@ -11,12 +11,12 @@ const TAG = [
 ];
 
 // 프롬프트 본문을 줄 단위로 색칠: #역할/#명령/#맥락/#형식, ##소제목, [자리표시]
-export function highlight(text, query = '') {
+export function highlight(text, query = '', opts = {}) {
   return String(text ?? '')
     .split('\n')
     .map((line) => {
       let html = esc(line);
-      html = html.replace(/\[([^\]\n]{1,40})\]/g, '<span class="ph">[$1]</span>');
+      if (opts.ph !== false) html = html.replace(/\[([^\]\n]{1,40})\]/g, '<span class="ph">[$1]</span>');
       if (/^##/.test(line)) {
         html = html.replace(/^(##[^:：]*)/, '<span class="t-sub">$1</span>');
       } else {

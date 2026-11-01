@@ -10,7 +10,8 @@ export async function onRequestPost({ env, request }) {
   const id = b.id || newId('p');
   const max = await env.DB.prepare('SELECT COALESCE(MAX(sort), 0) AS m FROM items WHERE cat_id=?').bind(b.cat_id).first();
   await env.DB.prepare(
-    'INSERT INTO items (id, cat_id, title, meta, chk, body, sort, updated_at) VALUES (?,?,?,?,?,?,?,?)',
-  ).bind(id, b.cat_id, b.title, b.meta || '', b.check || '', b.text || '', (max?.m || 0) + 10, new Date().toISOString()).run();
+    'INSERT INTO items (id, cat_id, title, meta, chk, body, sort, updated_at, kind, result) VALUES (?,?,?,?,?,?,?,?,?,?)',
+  ).bind(id, b.cat_id, b.title, b.meta || '', b.check || '', b.text || '', (max?.m || 0) + 10, new Date().toISOString(),
+    b.kind === 'example' ? 'example' : 'template', b.result || '').run();
   return json({ ok: true, id });
 }

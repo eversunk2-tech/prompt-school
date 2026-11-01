@@ -16,7 +16,7 @@
   <header class="top">
     <p class="eyebrow">제미나이 노트북 · 제미나이 교원 연수</p>
     <h1 class="title">선생님 <span class="hl">프롬프트 학교</span></h1>
-    <p class="lead">연수에서 실제로 돌려 보고 효과를 확인한 프롬프트입니다. <b>복사하기</b>를 눌러 붙여 넣고, <span class="ph">[대괄호]</span> 부분만 내 상황에 맞게 바꿔 쓰세요.</p>
+    <p class="lead">탭마다 두 가지로 나뉩니다. <b>실제 적용 프롬프트</b>는 강사가 실제 노트북·제미나이에 그대로 넣어 본 문장과 그 결과이고, <b>프롬프트 템플릿</b>은 <span class="ph">[대괄호]</span>만 바꿔 바로 쓰도록 정리한 틀입니다. <b>복사하기</b>를 눌러 붙여 넣으세요.</p>
     <div class="legend">
       <span><b class="t-role">#역할</b> 누구로서</span>
       <span><b class="t-cmd">#명령</b> 무엇을</span>
@@ -51,7 +51,9 @@
 <script type="module">
 import { esc, highlight, mark, copyText, store, GROUPS, loadData } from '/assets/common.js';
 
-const state = { data: null, grp: store('ps.grp') || 'all', cat: store('ps.cat') || '', q: '' };
+const state = { data: null, grp: store('ps.grp') || 'all', cat: store('ps.cat') || '', kind: store('ps.kind') || 'example', q: '' };
+const KIND = { example: '실제 적용 프롬프트', template: '프롬프트 템플릿' };
+const kindOf = (it) => (it.kind === 'example' ? 'example' : 'template');
 const $ = (s) => document.querySelector(s);
 
 function visibleCats() {
@@ -75,15 +77,18 @@ function renderTabs() {
 
 function card(it, cat) {
   const q = state.q;
-  return `<article class="card">
+  const ex = kindOf(it) === 'example';
+  return `<article class="card${ex ? ' ex' : ''}">
     <div class="card-head">
       <div>
+        ${q ? `<span class="kind-badge ${ex ? 'k-ex' : 'k-tp'}">${ex ? '실제 사례' : '템플릿'}</span>` : ''}
         <h3>${mark(esc(it.title), q)}</h3>
         ${it.meta ? `<p class="meta">${esc(it.meta)}${cat && q ? ` · <span class="muted">${esc(cat.label)}</span>` : ''}</p>` : (cat && q ? `<p class="meta muted">${esc(cat.label)}</p>` : '')}
       </div>
       <button class="copy" type="button" data-id="${esc(it.id)}">복사하기</button>
     </div>
-    <pre class="prompt">${highlight(it.text, q)}</pre>
+    <pre class="prompt">${highlight(it.text, q, { ph: !ex })}</pre>
+    ${it.result ? `<div class="result"><b>${ex ? '실제 결과' : '이렇게 나와요'}</b><p>${mark(esc(it.result), q)}</p></div>` : ''}
     ${it.check ? `<p class="check"><b>확인할 것</b> ${esc(it.check)}</p>` : '<div style="height:14px"></div>'}
   </article>`;
 }
@@ -94,7 +99,7 @@ function renderMain() {
     const q = state.q.toLowerCase();
     const hits = [];
     for (const c of visibleCats()) for (const it of c.items) {
-      if ([it.title, it.meta, it.text, it.check].join(' ').toLowerCase().includes(q)) hits.push([it, c]);
+      if ([it.title, it.meta, it.text, it.check, it.result].join(' ').toLowerCase().includes(q)) hits.push([it, c]);
     }
     main.innerHTML = `<div class="cat-head"><h2>‘${esc(state.q)}’ 검색 결과 ${hits.length}개</h2></div>` +
       (hits.length ? `<div class="cards">${hits.map(([it, c]) => card(it, c)).join('')}</div>` : '<p class="empty">맞는 프롬프트가 없습니다.</p>');
@@ -102,11 +107,21 @@ function renderMain() {
   }
   const c = state.data.categories.find((x) => x.id === state.cat);
   if (!c) { main.innerHTML = '<p class="empty">아직 프롬프트가 없습니다.</p>'; return; }
+  const by = { example: c.items.filter((it) => kindOf(it) === 'example'), template: c.items.filter((it) => kindOf(it) === 'template') };
+  let kind = state.kind;
+  if (!by[kind].length && by[kind === 'example' ? 'template' : 'example'].length) kind = kind === 'example' ? 'template' : 'example';
+  const list = by[kind];
+  const sub = ['example', 'template'].map((k) => `<button class="subtab" role="tab" data-k="${k}" aria-selected="${k === kind}">${KIND[k]}<span class="n">${by[k].length}</span></button>`).join('');
+  const help = kind === 'example'
+    ? '강사가 실제 노트북·제미나이에 넣은 문장 그대로입니다. 결과와 함께 보고, 내 상황에 맞게 고쳐 쓰세요.'
+    : '[대괄호] 부분만 내 상황에 맞게 바꿔 바로 쓰는 틀입니다.';
   main.innerHTML = `<div class="cat-head">
       <span class="grp-badge">${esc(GROUPS[c.grp] || c.grp)}</span>
       <h2>${esc(c.label)}</h2>${c.intro ? `<p>${esc(c.intro)}</p>` : ''}
     </div>
-    ${c.items.length ? `<div class="cards">${c.items.map((it) => card(it)).join('')}</div>` : '<p class="empty">이 탭에는 아직 프롬프트가 없습니다.</p>'}`;
+    <div class="subtabs" role="tablist" aria-label="프롬프트 종류">${sub}</div>
+    <p class="sub-help">${help}</p>
+    ${list.length ? `<div class="cards">${list.map((it) => card(it)).join('')}</div>` : '<p class="empty">이 탭에는 아직 프롬프트가 없습니다.</p>'}`;
 }
 
 function renderAll() { renderGroups(); renderTabs(); renderMain(); }
@@ -116,6 +131,8 @@ document.addEventListener('click', async (e) => {
   if (g) { state.grp = g.dataset.g; store('ps.grp', state.grp); state.cat = ''; renderAll(); return; }
   const t = e.target.closest('[data-c]');
   if (t) { state.cat = t.dataset.c; store('ps.cat', state.cat); state.q = ''; $('#q').value = ''; renderTabs(); renderMain(); window.scrollTo({ top: $('.bar').offsetTop, behavior: 'smooth' }); return; }
+  const k = e.target.closest('[data-k]');
+  if (k) { state.kind = k.dataset.k; store('ps.kind', state.kind); renderMain(); return; }
   const b = e.target.closest('.copy');
   if (b) {
     let it;

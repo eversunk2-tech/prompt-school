@@ -187,3 +187,20 @@ footer a { color: var(--ink-3); }
 .preview-label { font-size: 13px; color: var(--ink-2); font-weight: 600; margin: 4px 0; }
 .item-li { display: flex; gap: 4px; align-items: center; }
 .item-li .sel { flex: 1; }
+
+/* 실제 적용 프롬프트 / 프롬프트 템플릿 */
+.subtabs { display: inline-flex; gap: 4px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 4px; margin: 0 0 8px; }
+.subtab { border: 0; background: transparent; color: var(--ink-2); font: inherit; font-weight: 600; font-size: 15px; padding: 8px 14px; border-radius: 9px; cursor: pointer; }
+.subtab .n { font-size: 12px; margin-left: 6px; color: var(--ink-3); font-weight: 400; }
+.subtab[aria-selected="true"] { background: var(--brand); color: #fff; }
+.subtab[aria-selected="true"] .n { color: inherit; opacity: .75; }
+.subtab:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.sub-help { margin: 0 0 14px; font-size: 14px; color: var(--ink-3); }
+.card.ex { border-left: 4px solid var(--brand); }
+.result { margin: 0 18px 4px; padding: 10px 14px; border-radius: 10px; background: var(--brand-2); font-size: 14px; color: var(--ink-2); }
+.result b { color: var(--brand); font-weight: 600; display: block; margin-bottom: 2px; }
+.result p { margin: 0; white-space: pre-line; }
+.kind-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 999px; margin-bottom: 4px; }
+.kind-badge.k-ex { background: var(--brand); color: #fff; }
+.kind-badge.k-tp { background: var(--ph-bg); color: var(--ph-ink); }
+@media (max-width: 520px) { .subtabs { display: flex; } .subtab { flex: 1; padding: 8px 6px; font-size: 14px; } }

@@ -10,9 +10,11 @@ prompts/ 폴더의 각 .md 파일 = 탭 하나.
   sort: 30
   ---
 본문은 '### 제목' 으로 프롬프트를 나누고, 그 아래
-  meta: 설명
+  meta: 설명 (실제 사례는 '어디에서 썼는지')
   check: 확인할 것
   id: 고정 아이디(선택)
+  kind: template(기본) | example(실제 적용 프롬프트)
+  result: 실제로 나온 결과(실제 사례일 때)
 다음에 ``` 코드 블록으로 프롬프트 본문을 넣는다.
 """
 import json, re, sys, pathlib, hashlib
@@ -34,18 +36,32 @@ def parse(path):
         'id': head['id'], 'grp': head.get('grp', 'notebook'), 'label': head['label'],
         'intro': head.get('intro', ''), 'sort': int(head.get('sort', 0)), 'items': [],
     }
-    parts = re.split(r'^### ', body, flags=re.M)[1:]
+    # '### 제목'으로 나누되, ``` 코드 블록 안의 ###(프롬프트 본문의 소제목)는 건드리지 않음
+    parts, cur, fence = [], None, False
+    for line in body.split('\n'):
+        if line.startswith('```'):
+            fence = not fence
+        if not fence and line.startswith('### '):
+            if cur is not None:
+                parts.append('\n'.join(cur))
+            cur = [line[4:]]
+        elif cur is not None:
+            cur.append(line)
+    if cur is not None:
+        parts.append('\n'.join(cur))
     for i, part in enumerate(parts):
         title, rest = part.split('\n', 1)
         code = re.search(r'```[a-z]*\n(.*?)\n```', rest, re.S)
         if not code:
             sys.exit(f'{path.name}: "{title}"에 ``` 프롬프트 블록이 없습니다')
         before = rest[:code.start()]
-        fields = dict(re.findall(r'^(meta|check|id):\s*(.*)$', before, re.M))
+        fields = dict(re.findall(r'^(meta|check|id|kind|result):\s*(.*)$', before, re.M))
         pid = fields.get('id') or cat['id'] + '-' + hashlib.md5(title.strip().encode()).hexdigest()[:6]
         cat['items'].append({
             'id': pid, 'title': title.strip(), 'meta': fields.get('meta', ''),
             'check': fields.get('check', ''), 'text': code.group(1).strip('\n'), 'sort': i * 10,
+            'kind': 'example' if fields.get('kind', '').strip() == 'example' else 'template',
+            'result': fields.get('result', ''),
         })
     return cat
 
@@ -58,8 +74,11 @@ def main():
     if dup:
         sys.exit(f'중복 아이디: {dup}')
     OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps({'categories': cats}, ensure_ascii=False, indent=1), encoding='utf-8')
-    print(f'{len(cats)}개 탭, {len(ids)}개 프롬프트 → {OUT.relative_to(ROOT)}')
+    ver_file = SRC / 'VERSION'
+    version = int(ver_file.read_text().strip()) if ver_file.exists() else 1
+    OUT.write_text(json.dumps({'version': version, 'categories': cats}, ensure_ascii=False, indent=1), encoding='utf-8')
+    ex = sum(1 for c in cats for it in c['items'] if it['kind'] == 'example')
+    print(f'버전 {version}: {len(cats)}개 탭, {len(ids)}개 프롬프트(실제 사례 {ex}, 템플릿 {len(ids) - ex}) → {OUT.relative_to(ROOT)}')
 
 
 if __name__ == '__main__':

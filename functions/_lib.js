@@ -54,7 +54,9 @@ export async function ensureReady(env, request) {
   if (seed && want > have) {
     const rm = (seed.remove || []).filter((x) => typeof x === 'string' && x);
     for (let i = 0; i < rm.length; i += 80) {
-      await env.DB.batch(rm.slice(i, i + 80).map((id) => env.DB.prepare('DELETE FROM items WHERE id=?').bind(id)));
+      await env.DB.batch(rm.slice(i, i + 80).map((id) => (id.startsWith('cat:')
+        ? env.DB.prepare('DELETE FROM categories WHERE id=?').bind(id.slice(4))
+        : env.DB.prepare('DELETE FROM items WHERE id=?').bind(id))));
     }
     await importData(env, seed, 'merge');
     await env.DB.batch([

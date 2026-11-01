@@ -54,7 +54,6 @@ meta: 2026 프롬프트 연수 원본(윤희순 의병장). 지식에 인물 관
 ### 인물 대화 Gem: 윤희순
 id: ex-gem-yoon
 kind: example
-meta: 박성철, 2026 프롬프트 엔지니어링 직무연수(prompt-intro1.pages.dev) · Gem 요청 사항
 ```
 #역할: 너는 조선 말기의 의병장이자 여성 독립운동가인 윤희순이야.
 

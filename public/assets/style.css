@@ -1,4 +1,4 @@
-/* 프롬프트 은행 — 디자인: 모두의 배움터(class1) 디자인 체계(보라 주색, Pretendard 본문, G마켓 산스 제목,
+/* 프롬프트 은행 — 디자인: 모두의 배움터(class1) 디자인 체계를 바탕으로 색만 네이비 & 코랄로 바꿈(맨 아래 블록). (원래 체계: 보라 주색, Pretendard 본문, G마켓 산스 제목,
    부드러운 그림자, 파스텔 그라데이션 큰 카드, 알약 버튼, Fluent 3D 아이콘)를 따른다. */
 @import url("/fonts/pretendard/pretendardvariable-dynamic-subset.css");
 @import url("/fonts/gmarket-sans/gmarket-sans.css");
@@ -378,3 +378,44 @@ header.top { padding: 34px 0 18px; }
 .field input, .field select, .field textarea { font: inherit; font-size: 14.5px; color: var(--foreground); background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 9px 12px; }
 .field textarea { min-height: 200px; line-height: 1.6; }
 .preview-label { font-size: 13px; font-weight: 600; color: var(--muted-fg); margin: 10px 0 4px; }
+
+/* ───────── 사이트 색：네이비 & 코랄 (2026-11-02 확정, <html data-palette="navy">) ─────────
+   위의 보라 기본값은 모두의 배움터 체계 그대로 두고, 이 블록이 덮어쓴다. */
+:root[data-palette="navy"] {
+  --foreground: oklch(0.23 0.03 260);
+  --muted: oklch(0.965 0.008 250);
+  --muted-fg: oklch(0.5 0.02 255);
+  --border: oklch(0.91 0.012 250);
+  --primary: oklch(0.42 0.12 262);
+  --primary-grad-to: oklch(0.5 0.13 245);
+  --primary-soft: oklch(0.95 0.022 255);
+  --ring: oklch(0.62 0.1 255);
+  --bg-grad-top: oklch(0.97 0.015 240);
+  --bg-blob: oklch(0.88 0.06 30 / 0.22);
+  --hero-from: oklch(0.995 0.004 240);
+  --hero-to: oklch(0.94 0.03 245);
+  --hero-blob-1: oklch(0.86 0.07 245 / 0.5);
+  --hero-blob-2: oklch(0.87 0.07 30 / 0.45);
+  --hero-blob-3: oklch(0.9 0.05 200 / 0.45);
+  --highlight: oklch(0.86 0.09 35 / 0.5);
+  --sky-soft: oklch(0.955 0.012 250); --sky-strong: oklch(0.45 0.08 255); --sky-to: oklch(0.91 0.025 245);
+  --mint-soft: oklch(0.95 0.025 220); --mint-strong: oklch(0.47 0.1 230); --mint-to: oklch(0.89 0.05 215);
+  --peach-soft: oklch(0.95 0.03 35); --peach-strong: oklch(0.55 0.14 32); --peach-to: oklch(0.89 0.06 28);
+  --pink-soft: oklch(0.95 0.025 290); --pink-strong: oklch(0.5 0.12 290); --pink-to: oklch(0.9 0.04 300);
+  --shadow-brand: 0 10px 24px -8px color-mix(in oklch, var(--primary) 50%, transparent);
+  --heading-shadow: 0 0.05em 0 oklch(1 0 0 / 90%), 0 0.16em 0.4em oklch(0.6 0.08 255 / 0.2);
+  --code-bg: oklch(0.985 0.005 250);
+}
+:root[data-palette="navy"][data-theme="dark"] {
+  --foreground: oklch(0.96 0.008 250); --border: oklch(1 0 0 / 10%); --heading-shadow: 0 0.08em 0.3em oklch(0 0 0 / 60%); --shadow-brand: 0 10px 24px -6px oklch(0.7 0.1 35 / 0.25);
+  --background: oklch(0.18 0.03 262); --card: oklch(0.23 0.035 262); --muted: oklch(0.27 0.035 262); --muted-fg: oklch(0.76 0.02 255);
+  --primary: oklch(0.78 0.11 35); --primary-fg: oklch(0.2 0.04 35); --primary-grad-to: oklch(0.8 0.1 55); --primary-soft: oklch(0.3 0.05 262);
+  --bg-grad-top: oklch(0.23 0.045 262); --bg-blob: oklch(0.5 0.1 35 / 0.1);
+  --hero-from: oklch(0.28 0.06 262); --hero-to: oklch(0.22 0.045 262);
+  --hero-blob-1: oklch(0.5 0.1 245 / 0.3); --hero-blob-2: oklch(0.55 0.12 30 / 0.22); --hero-blob-3: oklch(0.5 0.07 200 / 0.2);
+  --sky-soft: oklch(0.29 0.035 255); --sky-strong: oklch(0.82 0.07 250); --sky-to: oklch(0.33 0.05 250);
+  --mint-soft: oklch(0.3 0.045 225); --mint-strong: oklch(0.82 0.09 220); --mint-to: oklch(0.34 0.06 215);
+  --peach-soft: oklch(0.31 0.05 35); --peach-strong: oklch(0.82 0.1 35); --peach-to: oklch(0.35 0.07 28);
+  --pink-soft: oklch(0.3 0.04 290); --pink-strong: oklch(0.82 0.08 290); --pink-to: oklch(0.34 0.05 300);
+  --code-bg: oklch(0.2 0.03 262);
+}

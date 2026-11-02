@@ -91,8 +91,8 @@ export const COURSES = {
     lead: '노트북·소스·스튜디오로 업무와 수업 자료를 바로 만드는 150분',
     modules: [
       { key: 'B2', num: 'Ⅱ', label: '첫걸음：세 칸과 인용 번호', icon: 'magnifying-glass-tilted-left', time: '15:38', desc: '근거 확인 꼬리말, 소스 켜고 끄기 · 실습①' },
-      { key: 'B3', num: 'Ⅲ', label: '우리 학교 전용 업무 비서', icon: 'briefcase', time: '16:05', desc: '생활기록부·중입·수학여행·학년 협의록 · 실습②' },
-      { key: 'B4', num: 'Ⅳ', label: '지도서 한 권, 수업 자료 공장', icon: 'artist-palette', time: '16:50', desc: '오개념·퀴즈·슬라이드·영상·오디오·학습 개요 · 실습③' },
+      { key: 'B3', num: 'Ⅲ', label: '우리 학교 전용 업무 비서', icon: 'briefcase', time: '16:05', desc: '생활기록부·중입·수학여행·학년 협의록 · 종합 실습② 프로젝트 노트북 한 바퀴' },
+      { key: 'B4', num: 'Ⅳ', label: '지도서 한 권, 수업 자료 공장', icon: 'artist-palette', time: '17:00', desc: '오개념·퀴즈·슬라이드·영상·오디오·학습 개요 · 실습③' },
       { key: 'B9', num: '+', label: '연수 뒤 더 해 보기', icon: 'light-bulb', time: '', desc: '회의록, 인수인계, 한 쪽 참고 자료' },
     ],
   },

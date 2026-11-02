@@ -3,157 +3,282 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>선생님 프롬프트 학교</title>
-<meta name="description" content="제미나이 노트북(구 NotebookLM)과 제미나이 수업·업무 활용 프롬프트 모음">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232e5b4f'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle' fill='%23f2a33a' font-family='sans-serif' font-weight='700'%3E%23%3C/text%3E%3C/svg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<title>프롬프트 은행</title>
+<meta name="description" content="제미나이 노트북·제미나이 교원 연수 프롬프트 은행 — 기본과정·심화과정 차시별 프롬프트 모음">
+<link rel="icon" href="/assets/3d/bank.webp">
+<script>
+  // 화면 테마(밝게/어둡게)를 그리기 전에 정한다. 저장한 값이 없으면 기기 설정을 따른다.
+  try {
+    const t = localStorage.getItem('ps.theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
-<div class="wrap">
-  <header class="top">
-    <p class="eyebrow">제미나이 노트북 · 제미나이 교원 연수</p>
-    <h1 class="title">선생님 <span class="hl">프롬프트 학교</span></h1>
-    <p class="lead">탭마다 두 가지로 나뉩니다. <b>실제 적용 프롬프트</b>는 강사가 실제 노트북·제미나이에 그대로 넣어 본 문장과 그 결과이고, <b>프롬프트 템플릿</b>은 <span class="ph">[대괄호]</span>만 바꿔 바로 쓰도록 정리한 틀입니다. <b>복사하기</b>를 눌러 붙여 넣으세요.</p>
-    <div class="legend">
-      <span><b class="t-role">#역할</b> 누구로서</span>
-      <span><b class="t-cmd">#명령</b> 무엇을</span>
-      <span><b class="t-ctx">#맥락</b> 어떤 조건에서</span>
-      <span><b class="t-fmt">#형식</b> 어떤 모양으로</span>
-      <span><span class="ph">[자리표시]</span> 바꿔 넣을 곳</span>
-    </div>
-  </header>
-</div>
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="메뉴 열기" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
+  <a class="brand" href="#/all">
+    <span class="brand-ic"><img src="/assets/3d/bank.webp" alt=""></span>
+    <span class="brand-name">프롬프트 은행</span>
+  </a>
+  <label class="top-search">
+    <span class="sr-only">프롬프트 검색</span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="q" type="search" placeholder="프롬프트 검색 (예: 오개념, 생활기록부, 퀴즈)" autocomplete="off">
+  </label>
+  <button class="icon-btn" id="themeBtn" type="button" aria-label="밝게/어둡게 바꾸기"></button>
+</header>
 
-<div class="bar">
-  <div class="wrap">
-    <div class="bar-row">
-      <div class="seg" role="group" aria-label="도구 선택" id="grp"></div>
-      <input class="search" id="q" type="search" placeholder="프롬프트 검색 (예: 오개념, 생활기록부, 퀴즈)" aria-label="프롬프트 검색">
-    </div>
-    <div class="tabs" role="tablist" id="tabs"></div>
+<div class="layout">
+  <nav class="sidebar" id="sidebar" aria-label="프롬프트 분류"></nav>
+  <div class="backdrop" id="backdrop"></div>
+  <div>
+    <main class="content" id="main" aria-live="polite"><p class="empty">불러오는 중…</p></main>
+    <footer class="site-foot">
+      <p>제작：박성철(오션초등학교) · 학생 개인정보는 넣지 마세요. AI 답변은 인용 번호로 원문을 꼭 확인하세요.</p>
+      <p>3D 아이콘：Microsoft Fluent Emoji(MIT) · 글꼴：Pretendard, G마켓 산스(SIL OFL 1.1) <span id="src"></span></p>
+    </footer>
   </div>
 </div>
-
-<main class="wrap" id="main" aria-live="polite">
-  <p class="empty">불러오는 중…</p>
-</main>
-
-<footer>
-  <div class="wrap">
-    <p>제작: 박성철(오션초등학교) · 학생 개인정보는 넣지 마세요. AI 답변은 반드시 원문(인용 번호)으로 확인하세요.</p>
-    <p id="src" class="muted"></p>
-  </div>
-</footer>
 
 <script type="module">
-import { esc, highlight, mark, copyText, store, GROUPS, loadData } from '/assets/common.js';
+import { esc, highlight, mark, copyText, store, GROUPS, loadData, COURSES, CAT_ICON, courseOf, icon3d } from '/assets/common.js';
 
-const state = { data: null, grp: store('ps.grp') || 'all', cat: store('ps.cat') || '', kind: store('ps.kind') || 'example', q: '' };
+const $ = (s) => document.querySelector(s);
+const SVG = {
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  back: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>',
+  chev: '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m9 6 6 6-6 6"/></svg>',
+  copy: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>',
+  moon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></svg>',
+  sun: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+};
+const ALL = { label: '전체 프롬프트', icon: 'books', tone: 'sky' };
 const KIND = { example: '실제 적용 프롬프트', template: '프롬프트 템플릿' };
 const kindOf = (it) => (it.kind === 'example' ? 'example' : 'template');
-const $ = (s) => document.querySelector(s);
+const state = { data: null, course: 'all', sel: '', kind: store('ps.kind') || 'example', q: '' };
+let flat = [];   // [item, category]
 
-function visibleCats() {
-  return state.data.categories.filter((c) => state.grp === 'all' || c.grp === state.grp);
+// ───────── 주소(#/basic/B3)와 상태 ─────────
+function readHash() {
+  const [, c = '', s = ''] = decodeURIComponent(location.hash || '').split('/');
+  state.course = ['all', 'basic', 'advanced'].includes(c) ? c : 'all';
+  state.sel = s;
+}
+function go(course, sel = '') {
+  const h = `#/${course}${sel ? '/' + sel : ''}`;
+  if (location.hash !== h) location.hash = h; else render();
 }
 
-function renderGroups() {
-  const groups = ['all', ...new Set(state.data.categories.map((c) => c.grp))];
-  $('#grp').innerHTML = groups
-    .map((g) => `<button type="button" data-g="${g}" aria-pressed="${g === state.grp}">${g === 'all' ? '전체' : esc(GROUPS[g] || g)}</button>`)
-    .join('');
+const itemsOfModule = (key) => flat.filter(([it]) => courseOf(it)?.mod.key === key).sort((a, b) => courseOf(a[0]).order - courseOf(b[0]).order);
+const itemsOfCat = (id) => flat.filter(([, c]) => c.id === id);
+
+// ───────── 사이드바 ─────────
+function renderSide() {
+  const top = [['all', ALL], ['basic', COURSES.basic], ['advanced', COURSES.advanced]];
+  const html = top.map(([id, c]) => {
+    const on = state.course === id;
+    let sub = '';
+    if (on) {
+      const list = id === 'all'
+        ? state.data.categories.map((cat) => ({ key: cat.id, num: '', label: cat.label, n: cat.items.length }))
+        : c.modules.map((m) => ({ key: m.key, num: m.num, label: m.label, n: itemsOfModule(m.key).length }));
+      sub = `<ul class="subnav">${list.map((x) => `<li><button class="sub-btn" data-go="${id}/${x.key}" aria-current="${state.sel === x.key && !state.q}">${x.num ? `<span class="num">${x.num}</span>` : ''}<span>${esc(x.label)}</span><span class="n">${x.n}</span></button></li>`).join('')}</ul>`;
+    }
+    return `<li class="tone-${c.tone}"><button class="nav-btn" data-go="${id}" aria-current="${on && !state.sel && !state.q}" aria-expanded="${on}"><span class="ic"><img src="${icon3d(c.icon)}" alt=""></span>${esc(c.label)}${SVG.chev}</button>${sub}</li>`;
+  }).join('');
+  $('#sidebar').innerHTML = `<p class="side-label">프롬프트 보기</p><ul class="nav">${html}</ul>
+    <div class="side-card"><b>프롬프트 읽는 법</b>
+      <span class="t-role">#역할</span> 누구로서 · <span class="t-cmd">#명령</span> 무엇을<br><span class="t-ctx">#맥락</span> 어떤 조건에서 · <span class="t-fmt">#형식</span> 어떤 모양으로<br><span class="ph">[대괄호]</span> 바꿔 넣을 곳</div>`;
 }
 
-function renderTabs() {
-  const cats = visibleCats();
-  if (!cats.find((c) => c.id === state.cat)) state.cat = cats[0]?.id || '';
-  $('#tabs').innerHTML = cats
-    .map((c) => `<button class="tab" role="tab" data-c="${esc(c.id)}" aria-selected="${c.id === state.cat && !state.q}">${esc(c.label)}<span class="n">${c.items.length}</span></button>`)
-    .join('');
+// ───────── 카드 ─────────
+function whenChip(it) {
+  const co = courseOf(it);
+  if (!co) return '';
+  const c = COURSES[co.course];
+  return `<button class="when tone-${c.tone}" type="button" data-go="${co.course}/${co.mod.key}" title="이 프롬프트를 쓰는 차시로 가기"><img src="${icon3d(c.icon)}" alt="">${c.label} ${co.mod.num === '+' ? '' : co.mod.num + ' '}${esc(co.mod.label)}</button>`;
 }
-
-function card(it, cat) {
-  const q = state.q;
-  const ex = kindOf(it) === 'example';
-  return `<article class="card${ex ? ' ex' : ''}">
+function card(it, cat, opt = {}) {
+  const q = state.q, ex = kindOf(it) === 'example';
+  const chips = [];
+  if (opt.when) chips.push(whenChip(it));
+  if (opt.kind) chips.push(`<span class="kind-badge ${ex ? 'k-ex' : 'k-tp'}">${ex ? '실제 사례' : '템플릿'}</span>`);
+  if (opt.cat && cat) chips.push(`<span class="kind-badge k-tp">${esc(cat.label)} 탭</span>`);
+  return `<article class="card">
+    ${chips.filter(Boolean).length ? `<div class="card-top">${chips.join('')}</div>` : ''}
     <div class="card-head">
       <div>
-        ${q ? `<span class="kind-badge ${ex ? 'k-ex' : 'k-tp'}">${ex ? '실제 사례' : '템플릿'}</span>` : ''}
         <h3>${mark(esc(it.title), q)}</h3>
-        ${it.meta ? `<p class="meta">${esc(it.meta)}${cat && q ? ` · <span class="muted">${esc(cat.label)}</span>` : ''}</p>` : (cat && q ? `<p class="meta muted">${esc(cat.label)}</p>` : '')}
+        ${it.meta ? `<p class="meta">${mark(esc(it.meta), q)}</p>` : ''}
       </div>
-      <button class="copy" type="button" data-id="${esc(it.id)}">복사하기</button>
+      <button class="copy" type="button" data-id="${esc(it.id)}">${SVG.copy}<span>복사하기</span></button>
     </div>
     <pre class="prompt">${highlight(it.text, q, { ph: !ex })}</pre>
     ${it.result ? `<div class="result"><b>${ex ? '실제 결과' : '이렇게 나와요'}</b><p>${mark(esc(it.result), q)}</p></div>` : ''}
-    ${it.check ? `<p class="check"><b>확인할 것</b> ${esc(it.check)}</p>` : '<div style="height:14px"></div>'}
+    ${it.check ? `<p class="check"><b>확인할 것</b>${esc(it.check)}</p>` : ''}
   </article>`;
 }
-
-function renderMain() {
-  const main = $('#main');
-  if (state.q) {
-    const q = state.q.toLowerCase();
-    const hits = [];
-    for (const c of visibleCats()) for (const it of c.items) {
-      if ([it.title, it.meta, it.text, it.check, it.result].join(' ').toLowerCase().includes(q)) hits.push([it, c]);
-    }
-    main.innerHTML = `<div class="cat-head"><h2>‘${esc(state.q)}’ 검색 결과 ${hits.length}개</h2></div>` +
-      (hits.length ? `<div class="cards">${hits.map(([it, c]) => card(it, c)).join('')}</div>` : '<p class="empty">맞는 프롬프트가 없습니다.</p>');
-    return;
-  }
-  const c = state.data.categories.find((x) => x.id === state.cat);
-  if (!c) { main.innerHTML = '<p class="empty">아직 프롬프트가 없습니다.</p>'; return; }
-  const by = { example: c.items.filter((it) => kindOf(it) === 'example'), template: c.items.filter((it) => kindOf(it) === 'template') };
-  let kind = state.kind;
-  if (!by[kind].length && by[kind === 'example' ? 'template' : 'example'].length) kind = kind === 'example' ? 'template' : 'example';
-  const list = by[kind];
-  const sub = ['example', 'template'].map((k) => `<button class="subtab" role="tab" data-k="${k}" aria-selected="${k === kind}">${KIND[k]}<span class="n">${by[k].length}</span></button>`).join('');
-  const help = kind === 'example'
-    ? '강사가 실제 노트북·제미나이에 넣은 문장 그대로입니다. 결과와 함께 보고, 내 상황에 맞게 고쳐 쓰세요.'
-    : '[대괄호] 부분만 내 상황에 맞게 바꿔 바로 쓰는 틀입니다.';
-  main.innerHTML = `<div class="cat-head">
-      <span class="grp-badge">${esc(GROUPS[c.grp] || c.grp)}</span>
-      <h2>${esc(c.label)}</h2>${c.intro ? `<p>${esc(c.intro)}</p>` : ''}
-    </div>
-    <div class="subtabs" role="tablist" aria-label="프롬프트 종류">${sub}</div>
-    <p class="sub-help">${help}</p>
-    ${list.length ? `<div class="cards">${list.map((it) => card(it)).join('')}</div>` : '<p class="empty">이 탭에는 아직 프롬프트가 없습니다.</p>'}`;
+function bigCard({ tone, icon, num, title, desc, chip, go: target }) {
+  return `<button class="big-card tone-${tone}" type="button" data-go="${target}">
+    <span class="bc-ic"><img src="${icon3d(icon)}" alt=""></span>
+    ${num ? `<span class="bc-num">${num}</span>` : ''}
+    <h3>${esc(title)}</h3>
+    <p>${esc(desc)}</p>
+    <span class="bc-foot"><span class="chip">${chip}</span><span class="go">${SVG.arrow}</span></span>
+  </button>`;
 }
 
-function renderAll() { renderGroups(); renderTabs(); renderMain(); }
+// 실제 사례 / 템플릿 나누어 보여 주기
+function listBlock(rows, opt) {
+  const by = { example: rows.filter(([it]) => kindOf(it) === 'example'), template: rows.filter(([it]) => kindOf(it) === 'template') };
+  let kind = state.kind;
+  if (!by[kind].length && by[kind === 'example' ? 'template' : 'example'].length) kind = kind === 'example' ? 'template' : 'example';
+  const tabs = ['example', 'template'].map((k) => `<button class="kind-tab" role="tab" data-k="${k}" aria-selected="${k === kind}">${KIND[k]}<span class="n">${by[k].length}</span></button>`).join('');
+  const help = kind === 'example'
+    ? '강사가 실제 노트북·제미나이에 넣은 문장 그대로입니다. 결과와 함께 보고 내 상황에 맞게 고쳐 쓰세요.'
+    : '<span class="ph">[대괄호]</span> 부분만 내 상황에 맞게 바꿔 바로 쓰는 틀입니다.';
+  const list = by[kind];
+  return `<div class="kind-tabs" role="tablist" aria-label="프롬프트 종류">${tabs}</div>
+    <p class="kind-help">${help}</p>
+    ${list.length ? `<div class="cards">${list.map(([it, c]) => card(it, c, opt)).join('')}</div>` : '<p class="empty">아직 프롬프트가 없습니다.</p>'}`;
+}
 
+// ───────── 화면 ─────────
+function viewHome() {
+  const nB = flat.filter(([it]) => courseOf(it)?.course === 'basic').length;
+  const nA = flat.filter(([it]) => courseOf(it)?.course === 'advanced').length;
+  const nEx = flat.filter(([it]) => kindOf(it) === 'example').length;
+  return `<section class="hero">
+      <div>
+        <span class="pill-badge"><img src="${icon3d('sparkles')}" alt="">제미나이 노트북 · 제미나이 교원 연수</span>
+        <h1>필요한 프롬프트를<br><span class="grad-text">꺼내 쓰는 은행</span></h1>
+        <p class="lead">연수에서 쓰는 프롬프트를 <em>기본과정</em>과 <em>심화과정</em>의 차시 순서대로 모았습니다. 지금 듣는 과정을 고르면 그 시간에 쓰는 프롬프트만 보입니다.</p>
+        <div class="hero-actions">
+          <button class="btn-pill primary" type="button" data-go="basic"><img src="${icon3d('seedling')}" alt="">기본과정 프롬프트</button>
+          <button class="btn-pill" type="button" data-go="advanced"><img src="${icon3d('rocket')}" alt="">심화과정 프롬프트</button>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <img class="main" src="${icon3d('bank')}" alt="">
+        <img class="s1" src="${icon3d('sparkles')}" alt="">
+        <img class="s2" src="${icon3d('light-bulb')}" alt="">
+        <img class="s3" src="${icon3d('memo')}" alt="">
+        <img class="s4" src="${icon3d('gem-stone')}" alt="">
+      </div>
+    </section>
+    <h2 class="sec-title"><img src="${icon3d('sparkles')}" alt="">어떤 연수를 듣고 있나요?</h2>
+    <div class="grid-cards two">
+      ${bigCard({ tone: 'mint', icon: 'seedling', num: '150분', title: '기본과정｜' + COURSES.basic.title, desc: COURSES.basic.lead, chip: `프롬프트 ${nB}개`, go: 'basic' })}
+      ${bigCard({ tone: 'peach', icon: 'rocket', num: '150분', title: '심화과정｜' + COURSES.advanced.title, desc: COURSES.advanced.lead, chip: `프롬프트 ${nA}개`, go: 'advanced' })}
+    </div>
+    <h2 class="sec-title"><img src="${icon3d('books')}" alt="">분류별로 보기 <span class="n">전체 ${flat.length}개 · 실제 사례 ${nEx}개</span></h2>
+    <div class="grid-cards">${state.data.categories.map((c) => bigCard({ tone: c.grp === 'gemini' ? 'pink' : 'sky', icon: CAT_ICON[c.id] || 'clipboard', num: GROUPS[c.grp] || '', title: c.label, desc: c.intro || '', chip: `${c.items.length}개`, go: 'all/' + c.id })).join('')}</div>`;
+}
+
+function viewCourse(cid) {
+  const c = COURSES[cid];
+  const first = c.modules[0];
+  return `<section class="hero tone tone-${c.tone}">
+      <div>
+        <span class="pill-badge"><span class="dot"></span>${c.label} · 150분</span>
+        <h1 class="sm">${esc(c.title)}</h1>
+        <p class="lead">${esc(c.lead)}. 차시를 고르면 그 시간에 쓰는 프롬프트가 강의 순서대로 나옵니다.</p>
+        <div class="hero-actions"><button class="btn-pill primary" type="button" data-go="${cid}/${first.key}">${first.num} ${esc(first.label)}부터 보기</button></div>
+      </div>
+      <div class="hero-art" aria-hidden="true"><img class="main" src="${icon3d(c.icon)}" alt=""><img class="s1" src="${icon3d('sparkles')}" alt=""><img class="s3" src="${icon3d('clipboard')}" alt=""></div>
+    </section>
+    <h2 class="sec-title"><img src="${icon3d('spiral-calendar')}" alt="">차시별 프롬프트</h2>
+    <div class="grid-cards">${c.modules.map((m) => bigCard({ tone: c.tone, icon: m.icon, num: m.num === '+' ? '연수 뒤' : `${m.num}${m.time ? ' · ' + m.time : ''}`, title: m.label, desc: m.desc, chip: `프롬프트 ${itemsOfModule(m.key).length}개`, go: `${cid}/${m.key}` })).join('')}</div>`;
+}
+
+function viewModule(cid, key) {
+  const c = COURSES[cid];
+  const i = c.modules.findIndex((m) => m.key === key);
+  const m = c.modules[i];
+  if (!m) return viewCourse(cid);
+  const prev = c.modules[i - 1], next = c.modules[i + 1];
+  return `<section class="page-head tone-${c.tone}">
+      <span class="ph-ic"><img src="${icon3d(m.icon)}" alt=""></span>
+      <div><span class="crumb">${c.label} ${m.num === '+' ? '' : m.num}${m.time ? ' · ' + m.time : ''}</span><h2>${esc(m.label)}</h2><p>${esc(m.desc)}</p></div>
+    </section>
+    ${listBlock(itemsOfModule(key), { kind: false, cat: true })}
+    <div class="pager">
+      ${prev ? `<button class="btn-pill" type="button" data-go="${cid}/${prev.key}">${SVG.back.replace('<svg', '<svg width="18" height="18"')}${prev.num} ${esc(prev.label)}</button>` : `<button class="btn-pill" type="button" data-go="${cid}">${SVG.back.replace('<svg', '<svg width="18" height="18"')}${c.label} 차시 목록</button>`}
+      ${next ? `<button class="btn-pill" type="button" data-go="${cid}/${next.key}">${next.num === '+' ? '' : next.num + ' '}${esc(next.label)}${SVG.arrow.replace('<svg', '<svg width="18" height="18"')}</button>` : '<span></span>'}
+    </div>`;
+}
+
+function viewCat(id) {
+  const c = state.data.categories.find((x) => x.id === id);
+  if (!c) return viewHome();
+  return `<section class="page-head tone-${c.grp === 'gemini' ? 'pink' : 'sky'}">
+      <span class="ph-ic"><img src="${icon3d(CAT_ICON[c.id] || 'clipboard')}" alt=""></span>
+      <div><span class="crumb">${esc(GROUPS[c.grp] || c.grp)}</span><h2>${esc(c.label)}</h2>${c.intro ? `<p>${esc(c.intro)}</p>` : ''}</div>
+    </section>
+    ${listBlock(itemsOfCat(id), { when: true })}`;
+}
+
+function viewSearch() {
+  const q = state.q.toLowerCase();
+  const hits = flat.filter(([it]) => [it.title, it.meta, it.text, it.check, it.result].join(' ').toLowerCase().includes(q));
+  return `<h2 class="sec-title" style="margin-top:6px"><img src="${icon3d('magnifying-glass-tilted-left')}" alt="">‘${esc(state.q)}’ 검색 결과 <span class="n">${hits.length}개</span></h2>
+    ${hits.length ? `<div class="cards">${hits.map(([it, c]) => card(it, c, { when: true, kind: true })).join('')}</div>` : '<p class="empty">맞는 프롬프트가 없습니다.</p>'}`;
+}
+
+function render() {
+  readHash();
+  renderSide();
+  const main = $('#main');
+  if (state.q) main.innerHTML = viewSearch();
+  else if (state.course === 'all') main.innerHTML = state.sel ? viewCat(state.sel) : viewHome();
+  else main.innerHTML = state.sel ? viewModule(state.course, state.sel) : viewCourse(state.course);
+  document.body.classList.remove('nav-open');
+  $('#menuBtn').setAttribute('aria-expanded', 'false');
+}
+
+// ───────── 이벤트 ─────────
 document.addEventListener('click', async (e) => {
-  const g = e.target.closest('[data-g]');
-  if (g) { state.grp = g.dataset.g; store('ps.grp', state.grp); state.cat = ''; renderAll(); return; }
-  const t = e.target.closest('[data-c]');
-  if (t) { state.cat = t.dataset.c; store('ps.cat', state.cat); state.q = ''; $('#q').value = ''; renderTabs(); renderMain(); window.scrollTo({ top: $('.bar').offsetTop, behavior: 'smooth' }); return; }
+  const g = e.target.closest('[data-go]');
+  if (g) {
+    const [c, s] = g.dataset.go.split('/');
+    state.q = ''; $('#q').value = '';
+    go(c, s);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
   const k = e.target.closest('[data-k]');
-  if (k) { state.kind = k.dataset.k; store('ps.kind', state.kind); renderMain(); return; }
+  if (k) { state.kind = k.dataset.k; store('ps.kind', state.kind); render(); return; }
   const b = e.target.closest('.copy');
   if (b) {
-    let it;
-    for (const c of state.data.categories) { it = c.items.find((x) => x.id === b.dataset.id); if (it) break; }
+    const it = flat.find(([x]) => x.id === b.dataset.id)?.[0];
     const ok = it && (await copyText(it.text));
-    b.textContent = ok ? '복사됨 ✓' : '복사 실패';
+    b.querySelector('span').textContent = ok ? '복사됨 ✓' : '복사 실패';
     b.classList.toggle('done', !!ok);
-    setTimeout(() => { b.textContent = '복사하기'; b.classList.remove('done'); }, 1600);
+    setTimeout(() => { b.querySelector('span').textContent = '복사하기'; b.classList.remove('done'); }, 1600);
   }
 });
-
 let timer;
-$('#q').addEventListener('input', (e) => {
-  clearTimeout(timer);
-  timer = setTimeout(() => { state.q = e.target.value.trim(); renderTabs(); renderMain(); }, 150);
+$('#q').addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value.trim(); render(); }, 150); });
+window.addEventListener('hashchange', () => { store('ps.hash', location.hash); render(); });
+$('#menuBtn').addEventListener('click', () => { const on = document.body.classList.toggle('nav-open'); $('#menuBtn').setAttribute('aria-expanded', String(on)); });
+$('#backdrop').addEventListener('click', () => document.body.classList.remove('nav-open'));
+function paintTheme() { $('#themeBtn').innerHTML = document.documentElement.dataset.theme === 'dark' ? SVG.sun : SVG.moon; }
+$('#themeBtn').addEventListener('click', () => {
+  const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t; store('ps.theme', t); paintTheme();
 });
+paintTheme();
 
 const { data, live } = await loadData();
 state.data = data;
-$('#src').textContent = live ? '' : '오프라인 사본(seed.json)을 보여 주고 있습니다.';
-renderAll();
+flat = data.categories.flatMap((c) => c.items.map((it) => [it, c]));
+$('#src').textContent = live ? '' : '· 오프라인 사본(seed.json)';
+if (!location.hash) { const h = store('ps.hash'); if (h) history.replaceState(null, '', h); }
+render();
 </script>
 </body>
 </html>

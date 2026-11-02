@@ -1,4 +1,4 @@
-# 선생님 프롬프트 학교 (prompt-school)
+# 프롬프트 은행 (prompt-school)
 
 제미나이 노트북(구 NotebookLM)과 제미나이를 수업·업무에 쓰는 프롬프트 모음 사이트입니다.
 **관리자 모드(`/admin`)에서 저장하면 사이트에 바로 반영**되고, 사이트 코드는 깃허브에 커밋·푸시하면 자동 배포됩니다.
@@ -75,3 +75,12 @@ result: 실제로 나온 결과 한두 문장
 python3 tools/build_seed.py                # prompts/*.md → public/data/seed.json
 npx wrangler pages dev public --d1 DB      # 로컬 미리보기 (ADMIN_PASSWORD는 .dev.vars에)
 ```
+
+## 기본과정·심화과정 탭 (연수 차시 배치)
+
+사이트 왼쪽의 **전체 프롬프트 / 기본과정 / 심화과정**은 프롬프트마다 붙은 `course` 값으로 나뉩니다.
+값은 `모듈 키:순번`(예: `B3:05` = 기본과정 Ⅲ 업무 비서의 5번째)이고, 모듈 이름·시간은 `public/assets/common.js`의 `COURSES`에 있습니다(강의원고 목차와 같음).
+
+- 저장소에서는 `prompts/COURSE`에 `[모듈 키]` 아래로 강의 순서대로 아이디를 적고 `python3 tools/build_seed.py` → `prompts/VERSION`을 올려 푸시합니다. 사이트 DB에는 **비어 있는 칸만** 채워지므로 관리자가 고친 값은 그대로입니다.
+- 관리자 화면에서는 프롬프트 편집 칸의 **연수 과정·차시**에서 고르고 순번을 적습니다.
+- 주소로 바로 열 수 있습니다: `#/basic`, `#/basic/B3`, `#/advanced/A5`, `#/all/lesson`.

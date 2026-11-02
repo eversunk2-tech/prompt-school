@@ -66,8 +66,36 @@ def parse(path):
     return cat
 
 
+def load_course():
+    """prompts/COURSE: '[모듈 키]' 아래 강의 순서대로 아이디 → {아이디: '모듈:순번'}"""
+    f = SRC / 'COURSE'
+    out, cur, n = {}, None, 0
+    if not f.exists():
+        return out
+    for line in f.read_text(encoding='utf-8').splitlines():
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        if line.startswith('[') and line.endswith(']'):
+            cur, n = line[1:-1], 0
+            continue
+        n += 1
+        if line in out:
+            sys.exit(f'COURSE: {line}가 두 번 나옵니다')
+        out[line] = f'{cur}:{n:02d}'
+    return out
+
+
 def main():
     cats = [parse(p) for p in sorted(SRC.glob('*.md'))]
+    course = load_course()
+    allids = {it['id'] for c in cats for it in c['items']}
+    miss = sorted(set(course) - allids)
+    if miss:
+        sys.exit(f'COURSE에 있지만 프롬프트에 없는 아이디: {miss}')
+    for c in cats:
+        for it in c['items']:
+            it['course'] = course.get(it['id'], '')
     cats.sort(key=lambda c: c['sort'])
     ids = [it['id'] for c in cats for it in c['items']]
     dup = {x for x in ids if ids.count(x) > 1}
@@ -80,7 +108,8 @@ def main():
     remove = [x.strip() for x in rm_file.read_text(encoding='utf-8').splitlines() if x.strip()] if rm_file.exists() else []
     OUT.write_text(json.dumps({'version': version, 'remove': remove, 'categories': cats}, ensure_ascii=False, indent=1), encoding='utf-8')
     ex = sum(1 for c in cats for it in c['items'] if it['kind'] == 'example')
-    print(f'버전 {version}: {len(cats)}개 탭, {len(ids)}개 프롬프트(실제 사례 {ex}, 템플릿 {len(ids) - ex}) → {OUT.relative_to(ROOT)}')
+    nc = sum(1 for c in cats for it in c['items'] if it.get('course'))
+    print(f'버전 {version}: {len(cats)}개 탭, {len(ids)}개 프롬프트(실제 사례 {ex}, 템플릿 {len(ids) - ex}, 연수 배치 {nc}) → {OUT.relative_to(ROOT)}')
 
 
 if __name__ == '__main__':

@@ -9,12 +9,12 @@ export async function onRequestPut({ env, request, params }) {
   const cur = await env.DB.prepare('SELECT * FROM items WHERE id=?').bind(params.id).first();
   if (!cur) return json({ error: '항목을 찾을 수 없습니다.' }, 404);
   await env.DB.prepare(
-    'UPDATE items SET cat_id=?, title=?, meta=?, chk=?, body=?, sort=?, updated_at=?, kind=?, result=? WHERE id=?',
+    'UPDATE items SET cat_id=?, title=?, meta=?, chk=?, body=?, sort=?, updated_at=?, kind=?, result=?, course=? WHERE id=?',
   ).bind(
     b.cat_id ?? cur.cat_id, b.title ?? cur.title, b.meta ?? cur.meta, b.check ?? cur.chk,
     b.text ?? cur.body, b.sort ?? cur.sort, new Date().toISOString(),
     b.kind ? (b.kind === 'example' ? 'example' : 'template') : (cur.kind || 'template'),
-    b.result ?? (cur.result || ''), params.id,
+    b.result ?? (cur.result || ''), b.course ?? (cur.course || ''), params.id,
   ).run();
   return json({ ok: true });
 }

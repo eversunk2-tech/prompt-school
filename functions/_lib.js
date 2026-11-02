@@ -25,19 +25,20 @@ const SCHEMA = [
      id TEXT PRIMARY KEY, cat_id TEXT NOT NULL, title TEXT NOT NULL,
      meta TEXT DEFAULT '', chk TEXT DEFAULT '', body TEXT DEFAULT '',
      sort INTEGER DEFAULT 0, updated_at TEXT,
-     kind TEXT DEFAULT 'template', result TEXT DEFAULT '')`,
+     kind TEXT DEFAULT 'template', result TEXT DEFAULT '', course TEXT DEFAULT '')`,
   `CREATE TABLE IF NOT EXISTS settings (k TEXT PRIMARY KEY, v TEXT)`,
 ];
 
 let ready = false;
 
-// 예전 표에 새 칸(kind: 템플릿/실제 사례, result: 실제 결과)이 없으면 추가
+// 예전 표에 새 칸(kind: 템플릿/실제 사례, result: 실제 결과, course: 연수 과정·차시)이 없으면 추가
 async function migrate(env) {
   const cols = await env.DB.prepare('PRAGMA table_info(items)').all();
   const names = new Set(cols.results.map((c) => c.name));
   const add = [];
   if (!names.has('kind')) add.push(`ALTER TABLE items ADD COLUMN kind TEXT DEFAULT 'template'`);
   if (!names.has('result')) add.push(`ALTER TABLE items ADD COLUMN result TEXT DEFAULT ''`);
+  if (!names.has('course')) add.push(`ALTER TABLE items ADD COLUMN course TEXT DEFAULT ''`);
   if (add.length) await env.DB.batch(add.map((q) => env.DB.prepare(q)));
 }
 
@@ -59,12 +60,22 @@ export async function ensureReady(env, request) {
         : env.DB.prepare('DELETE FROM items WHERE id=?').bind(id))));
     }
     await importData(env, seed, 'merge');
+    await fillCourse(env, seed);
     await env.DB.batch([
       env.DB.prepare(`INSERT OR REPLACE INTO settings (k, v) VALUES ('seed_version', ?)`).bind(String(want)),
       env.DB.prepare(`INSERT OR REPLACE INTO settings (k, v) VALUES ('seeded', ?)`).bind(new Date().toISOString()),
     ]);
   }
   ready = true;
+}
+
+// 연수 과정·차시(course)는 저장소의 seed.json이 정한다. 관리자가 직접 정한 값(비어 있지 않은 값)은 그대로 둔다.
+async function fillCourse(env, seed) {
+  const stmts = [];
+  for (const c of seed.categories || []) for (const it of c.items || []) {
+    if (it.course) stmts.push(env.DB.prepare(`UPDATE items SET course=? WHERE id=? AND (course IS NULL OR course='')`).bind(it.course, it.id));
+  }
+  for (let i = 0; i < stmts.length; i += 80) await env.DB.batch(stmts.slice(i, i + 80));
 }
 
 export async function loadSeed(env, request) {
@@ -94,9 +105,9 @@ export async function importData(env, data, mode = 'merge') {
     );
     (c.items || []).forEach((it, ii) => {
       stmts.push(
-        env.DB.prepare(`${verb} INTO items (id, cat_id, title, meta, chk, body, sort, updated_at, kind, result) VALUES (?,?,?,?,?,?,?,?,?,?)`)
+        env.DB.prepare(`${verb} INTO items (id, cat_id, title, meta, chk, body, sort, updated_at, kind, result, course) VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
           .bind(it.id, c.id, it.title, it.meta || '', it.check || '', it.text || '', it.sort ?? ii * 10, now,
-            it.kind === 'example' ? 'example' : 'template', it.result || ''),
+            it.kind === 'example' ? 'example' : 'template', it.result || '', it.course || ''),
       );
     });
   });
@@ -113,7 +124,7 @@ export async function readAll(env) {
   for (const it of items.results) {
     (byCat[it.cat_id] ||= []).push({
       id: it.id, title: it.title, meta: it.meta, check: it.chk, text: it.body,
-      kind: it.kind === 'example' ? 'example' : 'template', result: it.result || '',
+      kind: it.kind === 'example' ? 'example' : 'template', result: it.result || '', course: it.course || '',
       sort: it.sort, updated_at: it.updated_at,
     });
   }

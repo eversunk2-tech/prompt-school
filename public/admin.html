@@ -4,17 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>프롬프트 학교 관리자</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<title>프롬프트 은행 관리자</title>
+<link rel="icon" href="/assets/3d/bank.webp">
+<script>try { document.documentElement.dataset.theme = localStorage.getItem('ps.theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch (e) {}</script>
 <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
 <div class="wrap">
   <header class="top">
     <p class="eyebrow"><a href="/">← 사이트로</a></p>
-    <h1 class="title">관리자 <span class="hl">모드</span></h1>
+    <h1 class="title">프롬프트 은행 <span class="hl">관리자</span></h1>
     <p class="lead">여기서 저장하면 사이트에 바로 반영됩니다. 코드 수정이나 커밋은 필요 없습니다.</p>
   </header>
 
@@ -51,7 +50,7 @@
 </div>
 
 <script type="module">
-import { esc, highlight, toast, GROUPS } from '/assets/common.js';
+import { esc, highlight, toast, GROUPS, COURSES } from '/assets/common.js';
 
 const $ = (s) => document.querySelector(s);
 let KEY = '';
@@ -127,6 +126,9 @@ function editor(it) {
     <div class="field"><label for="iText">프롬프트 본문 <span class="muted">— #역할/#명령/#맥락/#형식, ##소제목, [자리표시]는 자동으로 색이 입혀집니다</span></label><textarea id="iText">${esc(it.text)}</textarea></div>
     <div class="field"><label for="iResult">결과 <span class="muted">— 실제로 어떤 답이 나왔는지(실제 사례에 씁니다)</span></label><textarea id="iResult" style="min-height:80px">${esc(it.result || '')}</textarea></div>
     <div class="field"><label for="iCheck">확인할 것</label><input id="iCheck" value="${esc(it.check)}"></div>
+    <div class="field"><label for="iCourse">연수 과정·차시 <span class="muted">— 기본과정·심화과정 탭에서 이 차시 아래에 보입니다. 순번이 작을수록 위</span></label>
+      <div class="row"><select id="iCourse" style="flex:1"><option value="">(연수 배치 없음 — 전체 탭에만)</option>${Object.values(COURSES).map((c) => `<optgroup label="${c.label}">${c.modules.map((m) => `<option value="${m.key}" ${String(it.course || '').split(':')[0] === m.key ? 'selected' : ''}>${c.label} ${m.num === '+' ? '' : m.num} ${esc(m.label)}</option>`).join('')}</optgroup>`).join('')}</select>
+      <input id="iCourseN" type="number" min="1" max="99" style="width:90px" value="${Number(String(it.course || '').split(':')[1]) || 50}" aria-label="차시 안 순번"></div></div>
     <div class="field"><label for="iCat">탭 옮기기</label>
       <select id="iCat">${st.data.categories.map((c) => `<option value="${esc(c.id)}" ${c.id === st.cat ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select></div>
     <div class="row" style="margin-bottom:12px">
@@ -144,7 +146,8 @@ function updatePreview() {
 }
 
 async function saveItem() {
-  const body = { title: $('#iTitle').value.trim(), meta: $('#iMeta').value.trim(), text: $('#iText').value, check: $('#iCheck').value.trim(), cat_id: $('#iCat').value, kind: $('#iKind').value, result: $('#iResult').value.trim() };
+  const ck = $('#iCourse').value;
+  const body = { title: $('#iTitle').value.trim(), meta: $('#iMeta').value.trim(), text: $('#iText').value, check: $('#iCheck').value.trim(), cat_id: $('#iCat').value, kind: $('#iKind').value, result: $('#iResult').value.trim(), course: ck ? `${ck}:${String(Math.max(1, Math.min(99, Number($('#iCourseN').value) || 50))).padStart(2, '0')}` : '' };
   if (!body.title) { toast('제목을 입력하세요'); return; }
   try {
     if (st.item === '__new') {
@@ -222,7 +225,7 @@ document.addEventListener('click', async (e) => {
 
 document.addEventListener('input', (e) => {
   if (e.target.id === 'iText') updatePreview();
-  if (['iTitle', 'iMeta', 'iText', 'iCheck', 'iResult', 'iKind'].includes(e.target.id)) { st.dirty = true; const m = $('#dirtyMsg'); if (m) m.textContent = '저장 안 됨'; }
+  if (['iTitle', 'iMeta', 'iText', 'iCheck', 'iResult', 'iKind', 'iCourse', 'iCourseN'].includes(e.target.id)) { st.dirty = true; const m = $('#dirtyMsg'); if (m) m.textContent = '저장 안 됨'; }
 });
 
 document.addEventListener('keydown', (e) => {

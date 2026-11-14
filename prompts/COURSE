@@ -140,6 +140,7 @@ ex-des-pi07
 ex-des-pi08
 ex-des-pi09
 ex-des-pi10
+gp-docs-export
 ds-audit
 ex3-ds-audit
 ds-verify
@@ -148,7 +149,9 @@ gp-sources
 ex3-gp-sources
 gp-long
 gp-models
+gp-refind
 ex3-gp-long
+ex4-gp-refind
 
 [AF]
 wk-share-check

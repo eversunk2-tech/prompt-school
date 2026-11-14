@@ -1,6 +1,7 @@
 # 연수 과정·차시 배치표 (tools/build_seed.py가 읽어 각 프롬프트의 course 값을 정한다)
 # 형식: '[모듈 키]' 줄 아래에 강의 순서대로 프롬프트 아이디를 한 줄에 하나
 # 모듈 키는 public/assets/common.js의 COURSES와 같아야 한다. B = 기본과정, A = 심화과정, 9 = 연수 뒤 더 해 보기
+# 보류 사항(prompts/HOLD)에 있는 아이디는 여기에 적지 않는다
 
 [B2]
 bas-cite
@@ -107,8 +108,10 @@ ex2-wk-handover
 wk-deskref
 
 [A2]
+ds-teacher-setting
 ds-layer-ask
 ex3-ds-layer-ask
+ds-missing
 ds-web-compare
 ex3-ds-web-compare
 ds-gaps
@@ -117,26 +120,14 @@ ex2-ds-gaps
 [A3]
 ds-ubd1
 ex3-ds-ubd1
+ds-gate1
+ds-tail-quote
 ds-ubd2
 ex3-ds-ubd2
-ds-ubd3
-ex3-ds-ubd3
 ds-ubd-peer
 ex3-ds-ubd-peer
 ex3-ds-ubd-peer-q
-ds-ubd4
-ex3-ds-ubd4
-ds-ubd-align
-ex3-ds-ubd-align
-
-[A4]
-wk-class-vision
-ex3-wk-class-vision
-wk-class-feature
-ex3-wk-class-feature
-wk-class-review
-ex3-wk-class-review
-wk-class-letter
+ds-gate2
 
 [A5]
 ex-des-pi01
@@ -151,25 +142,19 @@ ex-des-pi09
 ex-des-pi10
 ds-audit
 ex3-ds-audit
-ex2-ds-audit
 ds-verify
 ex3-ds-verify
-ex2-ds-verify
-bas-exist
-ex2-bas-exist
 gp-sources
 ex3-gp-sources
-ex2-gp-sources
 gp-long
 gp-models
 ex3-gp-long
-ex-gp-long
 
-[A6]
-ls-quiz-analysis
-ex3-ls-quiz-analysis
-ls-notebook-questions
-ex3-ls-notebook-questions
+[AF]
+wk-share-check
+gm-work
+ex2-gm-work
+ex2-gm-work-q
 
 [A7]
 tt-guide
@@ -178,27 +163,34 @@ ex2-tt-guide-q1
 ex2-tt-guide-q2
 ex2-tt-guide-q3
 ex2-tt-guide-q4
+ex4-tt-guide-q5
+ex4-tt-guide-q6
+ex4-tt-guide-q7
 
-[A8]
-cv-game
-ex2-cv-game
-cv-fix
-ex2-cv-fix
-cv-check
-ex2-cv-check
-gm-work
-ex2-gm-work
-ex2-gm-work-q
+[A6]
+ls-quiz-analysis
+ex3-ls-quiz-analysis
+ls-notebook-questions
+ex3-ls-notebook-questions
+ls-gate3
+ls-feedback-draft
 
 [A9]
-ds-card1
-ex2-ds-card1
-ds-card2
-ex2-ds-card2
-ds-card3
-ex2-ds-card3
-ds-compress
-ex2-ds-compress
+ds-ubd3
+ex3-ds-ubd3
+ds-ubd4
+ex3-ds-ubd4
+ds-ubd-align
+ex3-ds-ubd-align
+wk-class-vision
+ex3-wk-class-vision
+wk-class-feature
+ex3-wk-class-feature
+wk-class-review
+ex3-wk-class-review
+wk-class-letter
+cv-game
+ex2-cv-game
 tt-chain1
 ex2-tt-chain1
 tt-chain3
@@ -209,24 +201,3 @@ tt-chain5
 ex2-tt-chain5
 tt-chain6
 ex2-tt-chain6
-gp-plan
-ex2-gp-plan
-gp-rubric
-ex-gp-rubric
-ex2-gp-rubric
-gp-letter
-ex-gp-letter
-ex2-gp-letter
-gp-alt
-ex2-gp-alt
-ex-gp-photo
-cv-socratic
-ex-cv-socratic
-ex-cv-debate
-ex-cv-net
-ex-cv-tetris
-gm-plan
-ex2-gm-plan
-ex2-gm-plan-q
-gm-person
-ex-gem-yoon

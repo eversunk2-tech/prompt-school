@@ -29,7 +29,7 @@
   <section id="app" hidden>
     <div class="row" style="margin-bottom:14px">
       <button class="btn" id="newCat">+ 새 탭</button>
-      <button class="btn" id="seedMerge" title="저장소의 data/seed.json에 새로 추가된 항목만 가져옵니다">seed.json 새 항목 가져오기</button>
+      <button class="btn" id="seedMerge" title="저장소의 data/seed.json에 새로 추가된 항목만 가져옵니다(보류 항목 포함)">seed.json 새 항목 가져오기</button>
       <button class="btn" id="exportBtn">백업 내려받기(JSON)</button>
       <label class="btn" for="importFile" style="display:inline-block">백업으로 전체 복원</label>
       <input type="file" id="importFile" accept="application/json" hidden>
@@ -70,26 +70,39 @@ async function api(path, method = 'GET', body) {
 
 async function reload(keep = true) {
   st.data = await api('/api/data');
-  if (!keep || !st.data.categories.find((c) => c.id === st.cat)) st.cat = st.data.categories[0]?.id || '';
-  const c = curCat();
-  if (!c || !c.items.find((i) => i.id === st.item)) st.item = '';
+  if (!keep || (st.cat !== HOLD && !st.data.categories.find((c) => c.id === st.cat))) st.cat = st.data.categories[0]?.id || '';
+  if (!curItem()) st.item = '';
   render();
 }
+// 보류 사항: 사이트에서는 감추고 관리자만 보는 항목. 왼쪽 목록 맨 아래 '🔒 보류 사항'에 탭 구분 없이 모아 보여 준다.
+const HOLD = '__hold';
 const curCat = () => st.data.categories.find((c) => c.id === st.cat);
-const curItem = () => curCat()?.items.find((i) => i.id === st.item);
+const pubItems = (c) => c.items.filter((i) => !i.hold);
+const heldItems = () => st.data.categories.flatMap((c) => c.items.filter((i) => i.hold).map((i) => ({ ...i, _cat: c })));
+const curList = () => (st.cat === HOLD ? heldItems() : (curCat() ? pubItems(curCat()) : []));
+const curItem = () => curList().find((i) => i.id === st.item);
+const catOf = (id) => st.data.categories.find((c) => c.items.some((i) => i.id === id));
 
 function render() {
   $('#catList').innerHTML = st.data.categories.map((c, i) => `
     <li class="item-li">
-      <button class="sel" data-cat="${esc(c.id)}" aria-current="${c.id === st.cat}">${esc(c.label)} <span class="muted">${esc(GROUPS[c.grp] || c.grp)} · ${c.items.length}</span></button>
+      <button class="sel" data-cat="${esc(c.id)}" aria-current="${c.id === st.cat}">${esc(c.label)} <span class="muted">${esc(GROUPS[c.grp] || c.grp)} · ${pubItems(c).length}</span></button>
       <button class="btn mini" data-catmove="${i}:-1" aria-label="위로" ${i === 0 ? 'disabled' : ''}>↑</button>
       <button class="btn mini" data-catmove="${i}:1" aria-label="아래로" ${i === st.data.categories.length - 1 ? 'disabled' : ''}>↓</button>
-    </li>`).join('');
+    </li>`).join('') + `
+    <li class="item-li" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border, rgba(128,128,128,.3))">
+      <button class="sel" data-cat="${HOLD}" aria-current="${st.cat === HOLD}">🔒 보류 사항 <span class="muted">관리자만 · ${heldItems().length}</span></button>
+    </li>`;
   renderCat();
   renderItems();
 }
 
 function renderCat() {
+  if (st.cat === HOLD) {
+    $('#catEditor').innerHTML = `<h3>🔒 보류 사항</h3>
+      <p class="muted" style="margin:0">지금은 쓰지 않아 사이트에서 감춘 프롬프트입니다. 삭제된 것이 아니며 관리자만 볼 수 있습니다. 항목을 골라 읽고 고칠 수 있고, 탭과 연수 차시도 바꿀 수 있습니다. <b>다시 공개</b>를 누르면 사이트에 다시 보입니다. 공개 중인 프롬프트는 편집 칸의 <b>🔒 보류로 옮기기</b>로 이곳에 옮깁니다.</p>`;
+    return;
+  }
   const c = curCat();
   if (!c) { $('#catEditor').innerHTML = '<p class="muted">왼쪽에서 탭을 고르거나 새 탭을 만드세요.</p>'; return; }
   $('#catEditor').innerHTML = `
@@ -102,23 +115,39 @@ function renderCat() {
 }
 
 function renderItems() {
+  if (st.cat === HOLD) {
+    const list = heldItems();
+    const it = curItem();
+    $('#itemArea').innerHTML = `
+      <h3 style="margin:0">보류한 프롬프트 (${list.length})</h3>
+      <ul class="list" style="margin:10px 0 16px">${list.map((x) => `
+        <li class="item-li">
+          <button class="sel" data-item="${esc(x.id)}" aria-current="${x.id === st.item}"><span class="kind-badge ${x.kind === 'example' ? 'k-ex' : 'k-tp'}">${x.kind === 'example' ? '사례' : '템플릿'}</span> ${esc(x.title)} <span class="muted">${esc(x._cat.label)} 탭</span></button>
+        </li>`).join('') || '<li class="muted">보류한 프롬프트가 없습니다.</li>'}</ul>
+      ${it ? editor(it) : '<p class="muted">목록에서 프롬프트를 고르면 읽고 고칠 수 있습니다.</p>'}`;
+    if (it) updatePreview();
+    return;
+  }
   const c = curCat();
   if (!c) { $('#itemArea').innerHTML = ''; return; }
   const it = curItem();
+  const items = pubItems(c);
   $('#itemArea').innerHTML = `
-    <div class="row" style="justify-content:space-between"><h3 style="margin:0">프롬프트 (${c.items.length})</h3><button class="btn" id="newItem">+ 새 프롬프트</button></div>
-    <ul class="list" style="margin:10px 0 16px">${c.items.map((x, i) => `
+    <div class="row" style="justify-content:space-between"><h3 style="margin:0">프롬프트 (${items.length})</h3><button class="btn" id="newItem">+ 새 프롬프트</button></div>
+    <ul class="list" style="margin:10px 0 16px">${items.map((x, i) => `
       <li class="item-li">
         <button class="sel" data-item="${esc(x.id)}" aria-current="${x.id === st.item}"><span class="kind-badge ${x.kind === 'example' ? 'k-ex' : 'k-tp'}">${x.kind === 'example' ? '사례' : '템플릿'}</span> ${esc(x.title)}</button>
         <button class="btn mini" data-move="${i}:-1" aria-label="위로" ${i === 0 ? 'disabled' : ''}>↑</button>
-        <button class="btn mini" data-move="${i}:1" aria-label="아래로" ${i === c.items.length - 1 ? 'disabled' : ''}>↓</button>
+        <button class="btn mini" data-move="${i}:1" aria-label="아래로" ${i === items.length - 1 ? 'disabled' : ''}>↓</button>
       </li>`).join('') || '<li class="muted">아직 없습니다.</li>'}</ul>
     ${it || st.item === '__new' ? editor(it || { title: '', meta: '', text: '', check: '', kind: 'example', result: '' }) : '<p class="muted">목록에서 프롬프트를 고르면 여기서 고칠 수 있습니다.</p>'}`;
   if (it || st.item === '__new') updatePreview();
 }
 
 function editor(it) {
+  const catId = (it.id && catOf(it.id)?.id) || st.cat;
   return `
+    ${it.hold ? '<p class="notice" style="margin:0 0 12px">🔒 보류 중인 프롬프트입니다. 사이트에는 보이지 않습니다.</p>' : ''}
     <div class="field"><label for="iKind">종류</label>
       <select id="iKind"><option value="example" ${it.kind === 'example' ? 'selected' : ''}>실제 적용 프롬프트 (실제로 넣은 문장 그대로)</option><option value="template" ${it.kind !== 'example' ? 'selected' : ''}>프롬프트 템플릿 ([대괄호]로 바꿔 쓰는 틀)</option></select></div>
     <div class="field"><label for="iTitle">제목</label><input id="iTitle" value="${esc(it.title)}"></div>
@@ -130,9 +159,12 @@ function editor(it) {
       <div class="row"><select id="iCourse" style="flex:1"><option value="">(연수 배치 없음 — 전체 탭에만)</option>${Object.values(COURSES).map((c) => `<optgroup label="${c.label}">${c.modules.map((m) => `<option value="${m.key}" ${String(it.course || '').split(':')[0] === m.key ? 'selected' : ''}>${c.label} ${m.num === '+' ? '' : m.num} ${esc(m.label)}</option>`).join('')}</optgroup>`).join('')}</select>
       <input id="iCourseN" type="number" min="1" max="99" style="width:90px" value="${Number(String(it.course || '').split(':')[1]) || 50}" aria-label="차시 안 순번"></div></div>
     <div class="field"><label for="iCat">탭 옮기기</label>
-      <select id="iCat">${st.data.categories.map((c) => `<option value="${esc(c.id)}" ${c.id === st.cat ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select></div>
+      <select id="iCat">${st.data.categories.map((c) => `<option value="${esc(c.id)}" ${c.id === catId ? 'selected' : ''}>${esc(c.label)}</option>`).join('')}</select></div>
     <div class="row" style="margin-bottom:12px">
       <button class="btn primary" id="saveItem">${st.item === '__new' ? '추가하기' : '저장 (Ctrl+S)'}</button>
+      ${st.item === '__new' ? '' : (it.hold
+        ? '<button class="btn" id="unholdItem" title="사이트에 다시 보이게 합니다">다시 공개</button>'
+        : '<button class="btn" id="holdItem" title="지우지 않고 사이트에서만 감춥니다. 보류 사항에서 다시 공개할 수 있습니다">🔒 보류로 옮기기</button>')}
       ${st.item === '__new' ? '' : '<button class="btn danger" id="delItem">삭제</button>'}
       <span class="muted" id="dirtyMsg"></span>
     </div>
@@ -156,7 +188,7 @@ async function saveItem() {
     } else {
       await api('/api/items/' + encodeURIComponent(st.item), 'PUT', body);
     }
-    st.cat = body.cat_id;
+    if (st.cat !== HOLD) st.cat = body.cat_id;
     st.dirty = false;
     toast('저장했습니다. 사이트에 바로 반영됩니다.');
     await reload();
@@ -192,9 +224,18 @@ document.addEventListener('click', async (e) => {
     if (t.dataset.cat) { if (!guard()) return; st.cat = t.dataset.cat; st.item = ''; st.dirty = false; render(); }
     else if (t.dataset.item) { if (!guard()) return; st.item = t.dataset.item; st.dirty = false; renderItems(); }
     else if (t.dataset.catmove) { const [i, d] = t.dataset.catmove.split(':').map(Number); await swap(st.data.categories, i, d, '/api/categories/'); }
-    else if (t.dataset.move) { const [i, d] = t.dataset.move.split(':').map(Number); await swap(curCat().items, i, d, '/api/items/'); }
+    else if (t.dataset.move) { const [i, d] = t.dataset.move.split(':').map(Number); await swap(pubItems(curCat()), i, d, '/api/items/'); }
     else if (t.id === 'newItem') { if (!guard()) return; st.item = '__new'; st.dirty = false; renderItems(); $('#iTitle').focus(); }
     else if (t.id === 'saveItem') { await saveItem(); }
+    else if (t.id === 'holdItem' || t.id === 'unholdItem') {
+      // 보류 ↔ 공개만 바꾼다(본문·탭·차시는 그대로). 고치던 내용이 있으면 먼저 저장하도록 알린다.
+      if (!guard()) return;
+      const hold = t.id === 'holdItem';
+      await api('/api/items/' + encodeURIComponent(st.item), 'PUT', { hold });
+      st.item = ''; st.dirty = false;
+      toast(hold ? '보류 사항으로 옮겼습니다. 사이트에서는 보이지 않습니다.' : '다시 공개했습니다. 사이트에 바로 보입니다.');
+      await reload();
+    }
     else if (t.id === 'delItem') {
       if (t.dataset.sure !== '1') { t.dataset.sure = '1'; t.textContent = '정말 삭제? 한 번 더'; setTimeout(() => { t.dataset.sure = ''; t.textContent = '삭제'; }, 3000); return; }
       await api('/api/items/' + encodeURIComponent(st.item), 'DELETE'); st.item = ''; st.dirty = false; toast('삭제했습니다'); await reload();

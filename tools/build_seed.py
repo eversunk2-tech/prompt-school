@@ -16,12 +16,20 @@ prompts/ 폴더의 각 .md 파일 = 탭 하나.
   kind: template(기본) | example(실제 적용 프롬프트)
   result: 실제로 나온 결과(실제 사례일 때)
 다음에 ``` 코드 블록으로 프롬프트 본문을 넣는다.
+
+그 밖의 파일(prompts/):
+  COURSE        연수 과정·차시 배치
+  HOLD          보류 사항(사이트에서 감추고 관리자 화면에만 모으는 아이디)
+  COURSE_RESET  차시 배치를 통째로 바꾼 버전 표시
+  REMOVE        버전이 오를 때 사이트 DB에서 지우고 seed 내용으로 다시 넣을 아이디
+  VERSION       이 숫자가 올라야 사이트 DB에 반영된다
 """
 import json, re, sys, pathlib, hashlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / 'prompts'
 OUT = ROOT / 'public' / 'data' / 'seed.json'
+HELD = ROOT / 'functions' / '_held.js'  # 보류 항목(공개 주소로는 열리지 않는 서버 쪽 파일)
 
 
 def parse(path):
@@ -86,6 +94,14 @@ def load_course():
     return out
 
 
+def read_ids(name):
+    """prompts/<name>: 한 줄에 아이디 하나. '#' 줄과 빈 줄은 건너뜀"""
+    f = SRC / name
+    if not f.exists():
+        return []
+    return [x.strip() for x in f.read_text(encoding='utf-8').splitlines() if x.strip() and not x.strip().startswith('#')]
+
+
 def main():
     cats = [parse(p) for p in sorted(SRC.glob('*.md'))]
     course = load_course()
@@ -93,6 +109,13 @@ def main():
     miss = sorted(set(course) - allids)
     if miss:
         sys.exit(f'COURSE에 있지만 프롬프트에 없는 아이디: {miss}')
+    hold = read_ids('HOLD')  # 보류 사항: 지우지 않고 관리자 화면에만 보이는 항목
+    miss = sorted(set(hold) - allids)
+    if miss:
+        sys.exit(f'HOLD에 있지만 프롬프트에 없는 아이디: {miss}')
+    both = sorted(set(hold) & set(course))
+    if both:
+        sys.exit(f'HOLD와 COURSE에 함께 있는 아이디(보류 항목은 COURSE에서 빼세요): {both}')
     for c in cats:
         for it in c['items']:
             it['course'] = course.get(it['id'], '')
@@ -106,10 +129,23 @@ def main():
     version = int(ver_file.read_text().strip()) if ver_file.exists() else 1
     rm_file = SRC / 'REMOVE'  # 사이트 DB에서도 지울 예전 항목 아이디(한 줄에 하나)
     remove = [x.strip() for x in rm_file.read_text(encoding='utf-8').splitlines() if x.strip()] if rm_file.exists() else []
-    OUT.write_text(json.dumps({'version': version, 'remove': remove, 'categories': cats}, ensure_ascii=False, indent=1), encoding='utf-8')
+    # 보류 항목은 공개 파일(seed.json)에 본문을 싣지 않는다. 아이디 목록만 남기고 본문은 functions/_held.js로 보낸다.
+    hs = set(hold)
+    held = [dict(c, items=[dict(it, hold=True) for it in c['items'] if it['id'] in hs]) for c in cats]
+    held = [c for c in held if c['items']]
+    pub = [dict(c, items=[it for it in c['items'] if it['id'] not in hs]) for c in cats]
+    seed = {'version': version, 'remove': remove, 'hold': hold, 'categories': pub}
+    cr = read_ids('COURSE_RESET')  # '버전 모듈키첫글자' 한 줄
+    if cr:
+        v, prefix = cr[-1].split()
+        seed['course_reset'] = {'version': int(v), 'prefix': prefix}
+    OUT.write_text(json.dumps(seed, ensure_ascii=False, indent=1), encoding='utf-8')
+    HELD.write_text('// tools/build_seed.py가 만든 파일입니다. 직접 고치지 마세요(prompts/HOLD와 prompts/*.md를 고친 뒤 다시 만듭니다).\n'
+                    '// 보류 사항 항목의 본문. 관리자만 볼 수 있도록 공개 폴더(public/)가 아닌 여기에 둡니다.\n'
+                    'export const HELD = ' + json.dumps({'categories': held}, ensure_ascii=False, indent=1) + ';\n', encoding='utf-8')
     ex = sum(1 for c in cats for it in c['items'] if it['kind'] == 'example')
     nc = sum(1 for c in cats for it in c['items'] if it.get('course'))
-    print(f'버전 {version}: {len(cats)}개 탭, {len(ids)}개 프롬프트(실제 사례 {ex}, 템플릿 {len(ids) - ex}, 연수 배치 {nc}) → {OUT.relative_to(ROOT)}')
+    print(f'버전 {version}: {len(cats)}개 탭, {len(ids)}개 프롬프트(실제 사례 {ex}, 템플릿 {len(ids) - ex}, 연수 배치 {nc}, 보류 {len(hold)}) → {OUT.relative_to(ROOT)}, {HELD.relative_to(ROOT)}')
 
 
 if __name__ == '__main__':

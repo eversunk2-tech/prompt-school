@@ -1,0 +1,43 @@
+# 보류 사항: 지금은 쓰지 않아 사이트에서 감추는 프롬프트 아이디(한 줄에 하나). 지우지 않고 관리자 화면 '🔒 보류 사항'에만 모인다.
+# tools/build_seed.py가 읽어, 이 항목들은 공개 파일(public/data/seed.json)에서 빼고 functions/_held.js에 따로 담는다.
+# 여기 새로 적은 아이디는 prompts/VERSION을 올려 푸시할 때 한 번만 보류로 바뀐다.
+# 관리자가 '다시 공개'한 항목은 이 목록에 남아 있어도 다시 보류되지 않는다(다시 감추려면 관리자 화면에서 '보류로 옮기기').
+ex2-ds-audit
+ex2-ds-verify
+ex2-gp-sources
+ex-gp-long
+bas-exist
+ex2-bas-exist
+cv-fix
+ex2-cv-fix
+cv-check
+ex2-cv-check
+ds-card1
+ex2-ds-card1
+ds-card2
+ex2-ds-card2
+ds-card3
+ex2-ds-card3
+ds-compress
+ex2-ds-compress
+gp-plan
+ex2-gp-plan
+gp-rubric
+ex-gp-rubric
+ex2-gp-rubric
+gp-letter
+ex-gp-letter
+ex2-gp-letter
+gp-alt
+ex2-gp-alt
+ex-gp-photo
+cv-socratic
+ex-cv-socratic
+ex-cv-debate
+ex-cv-net
+ex-cv-tetris
+gm-plan
+ex2-gm-plan
+ex2-gm-plan-q
+gm-person
+ex-gem-yoon

@@ -76,12 +76,17 @@ export function toast(msg) {
 
 // 데이터 읽기: API가 안 되면 seed.json으로 대체
 export async function loadData() {
+  let key = '';
+  try { key = sessionStorage.getItem('ps.key') || ''; } catch (e) { /* 저장소를 못 쓰면 일반 접속으로 */ }
   try {
-    const r = await fetch('/api/data', { cache: 'no-store' });
+    const r = await fetch('/api/data', { cache: 'no-store', headers: key ? { 'x-admin-key': key } : {} });
     if (r.ok) return { data: await r.json(), live: true };
   } catch (e) { /* 아래로 */ }
+  // 오프라인 사본은 누구나 받을 수 있으므로 관리자 전용 과정(심화)의 차시 배치를 뺀다
   const r2 = await fetch('/data/seed.json', { cache: 'no-store' });
-  return { data: await r2.json(), live: false };
+  const data = await r2.json();
+  for (const c of data.categories || []) for (const it of c.items || []) if (String(it.course || '').charAt(0) === 'A') it.course = '';
+  return { data: { ...data, admin: false }, live: false };
 }
 
 // 연수 과정·차시(강의원고 목차와 같음). 프롬프트의 course 값 = '모듈 키:순번' (예: 'B3:05')

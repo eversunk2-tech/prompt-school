@@ -30,7 +30,24 @@
     <input id="q" type="search" placeholder="프롬프트 검색 (예: 오개념, 생활기록부, 퀴즈)" autocomplete="off">
   </label>
   <button class="icon-btn" id="themeBtn" type="button" aria-label="밝게/어둡게 바꾸기"></button>
+  <button class="admin-btn" id="adminBtn" type="button" aria-haspopup="dialog">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+    <span id="adminLabel">관리자</span>
+  </button>
 </header>
+
+<dialog class="admin-dlg" id="adminDlg" aria-labelledby="adminDlgTitle">
+  <form id="adminForm" method="dialog">
+    <h3 id="adminDlgTitle">관리자 로그인</h3>
+    <p class="muted">프롬프트를 고치거나 더하려면 관리자 비밀번호가 필요합니다.</p>
+    <input id="adminPw" type="password" class="search" autocomplete="current-password" placeholder="관리자 비밀번호" aria-label="관리자 비밀번호">
+    <p class="admin-msg" id="adminMsg" role="alert"></p>
+    <div class="row">
+      <button class="btn" type="button" id="adminCancel">닫기</button>
+      <button class="btn primary" type="submit" id="adminGo">들어가기</button>
+    </div>
+  </form>
+</dialog>
 
 <div class="layout">
   <nav class="sidebar" id="sidebar" aria-label="프롬프트 분류"></nav>
@@ -266,6 +283,31 @@ $('#q').addEventListener('input', (e) => { clearTimeout(timer); timer = setTimeo
 window.addEventListener('hashchange', () => { store('ps.hash', location.hash); render(); });
 $('#menuBtn').addEventListener('click', () => { const on = document.body.classList.toggle('nav-open'); $('#menuBtn').setAttribute('aria-expanded', String(on)); });
 $('#backdrop').addEventListener('click', () => document.body.classList.remove('nav-open'));
+// 관리자 로그인: 비밀번호가 맞으면 이 탭에만 기억하고 관리자 화면으로 간다
+const adminKey = () => { try { return sessionStorage.getItem('ps.key') || ''; } catch (e) { return ''; } };
+function paintAdmin() { $('#adminLabel').textContent = adminKey() ? '관리자 화면' : '관리자'; }
+$('#adminBtn').addEventListener('click', () => {
+  if (adminKey()) { location.href = '/admin.html'; return; }
+  $('#adminMsg').textContent = ''; $('#adminPw').value = '';
+  $('#adminDlg').showModal(); $('#adminPw').focus();
+});
+$('#adminCancel').addEventListener('click', () => $('#adminDlg').close());
+$('#adminForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const key = $('#adminPw').value;
+  if (!key) { $('#adminMsg').textContent = '비밀번호를 입력해 주세요.'; return; }
+  $('#adminGo').disabled = true; $('#adminMsg').textContent = '';
+  try {
+    const r = await fetch('/api/login', { method: 'POST', headers: { 'x-admin-key': key } });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || '로그인하지 못했습니다.');
+    try { sessionStorage.setItem('ps.key', key); } catch (_) {}
+    location.href = '/admin.html';
+  } catch (err) { $('#adminMsg').textContent = err.message; $('#adminPw').select(); }
+  finally { $('#adminGo').disabled = false; }
+});
+paintAdmin();
+
 function paintTheme() { $('#themeBtn').innerHTML = document.documentElement.dataset.theme === 'dark' ? SVG.sun : SVG.moon; }
 $('#themeBtn').addEventListener('click', () => {
   const t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';

@@ -62,7 +62,7 @@
 </div>
 
 <script type="module">
-import { esc, highlight, mark, copyText, store, GROUPS, loadData, COURSES, CAT_ICON, courseOf, icon3d } from '/assets/common.js';
+import { esc, highlight, mark, copyText, store, GROUPS, loadData, COURSES, ADMIN_ONLY, CAT_ICON, courseOf, icon3d } from '/assets/common.js';
 
 const $ = (s) => document.querySelector(s);
 const SVG = {
@@ -82,9 +82,9 @@ let flat = [];   // [item, category]
 // ───────── 주소(#/basic/B3)와 상태 ─────────
 function readHash() {
   const [, c = '', s = ''] = decodeURIComponent(location.hash || '').split('/');
-  state.course = ['all', 'basic', 'advanced'].includes(c) ? c : 'all';
+  state.course = ['all', 'basic', 'advanced', 'legacy'].includes(c) ? c : 'all';
   state.sel = s;
-  if (state.course === 'advanced' && !state.admin) { state.course = 'all'; state.sel = ''; } // 심화과정은 관리자만
+  if (ADMIN_ONLY.includes(state.course) && !state.admin) { state.course = 'all'; state.sel = ''; } // 예전 심화과정은 관리자만
 }
 function go(course, sel = '') {
   const h = `#/${course}${sel ? '/' + sel : ''}`;
@@ -96,7 +96,7 @@ const itemsOfCat = (id) => flat.filter(([, c]) => c.id === id);
 
 // ───────── 사이드바 ─────────
 function renderSide() {
-  const top = [['all', ALL], ['basic', COURSES.basic], ['advanced', COURSES.advanced]].filter(([id]) => id !== 'advanced' || state.admin);
+  const top = [['all', ALL], ['basic', COURSES.basic], ['advanced', COURSES.advanced], ['legacy', COURSES.legacy]].filter(([id]) => !ADMIN_ONLY.includes(id) || state.admin);
   const html = top.map(([id, c]) => {
     const on = state.course === id;
     let sub = '';
@@ -169,15 +169,16 @@ function listBlock(rows, opt) {
 function viewHome() {
   const nB = flat.filter(([it]) => courseOf(it)?.course === 'basic').length;
   const nA = flat.filter(([it]) => courseOf(it)?.course === 'advanced').length;
+  const nL = flat.filter(([it]) => courseOf(it)?.course === 'legacy').length;
   const nEx = flat.filter(([it]) => kindOf(it) === 'example').length;
   return `<section class="hero">
       <div>
         <span class="pill-badge"><img src="${icon3d('sparkles')}" alt="">제미나이 노트북 · 제미나이 교원 연수</span>
         <h1>필요한 프롬프트를<br><span class="grad-text">꺼내 쓰는 은행</span></h1>
-        <p class="lead">${state.admin ? '연수에서 쓰는 프롬프트를 <em>기본과정</em>과 <em>심화과정</em>의 차시 순서대로 모았습니다. 지금 듣는 과정을 고르면 그 시간에 쓰는 프롬프트만 보입니다.' : '연수에서 쓰는 프롬프트를 <em>기본과정</em>의 차시 순서대로 모았습니다. 과정을 고르면 그 시간에 쓰는 프롬프트만 보입니다.'}</p>
+        <p class="lead">연수에서 쓰는 프롬프트를 <em>기본과정</em>과 <em>심화과정</em>의 차시 순서대로 모았습니다. 지금 듣는 과정을 고르면 그 시간에 쓰는 프롬프트만 보입니다.</p>
         <div class="hero-actions">
           <button class="btn-pill primary" type="button" data-go="basic"><img src="${icon3d('seedling')}" alt="">기본과정 프롬프트</button>
-          ${state.admin ? `<button class="btn-pill" type="button" data-go="advanced"><img src="${icon3d('rocket')}" alt="">심화과정 프롬프트</button>` : ''}
+          <button class="btn-pill" type="button" data-go="advanced"><img src="${icon3d('rocket')}" alt="">심화과정 프롬프트</button>
         </div>
       </div>
       <div class="hero-art" aria-hidden="true">
@@ -191,7 +192,8 @@ function viewHome() {
     <h2 class="sec-title"><img src="${icon3d('sparkles')}" alt="">어떤 연수를 듣고 있나요?</h2>
     <div class="grid-cards two">
       ${bigCard({ tone: 'mint', icon: 'seedling', num: '150분', title: '기본과정｜' + COURSES.basic.title, desc: COURSES.basic.lead, chip: `프롬프트 ${nB}개`, go: 'basic' })}
-      ${state.admin ? bigCard({ tone: 'peach', icon: 'rocket', num: '150분', title: '심화과정｜' + COURSES.advanced.title + ' (관리자만 보임)', desc: COURSES.advanced.lead, chip: `프롬프트 ${nA}개`, go: 'advanced' }) : ''}
+      ${bigCard({ tone: 'peach', icon: 'rocket', num: '150분', title: '심화과정｜' + COURSES.advanced.title, desc: COURSES.advanced.lead, chip: `프롬프트 ${nA}개`, go: 'advanced' })}
+      ${state.admin ? bigCard({ tone: 'pink', icon: 'card-index-dividers', num: '보관', title: '심화과정(이전판)｜' + COURSES.legacy.title + ' (관리자만 보임)', desc: COURSES.legacy.lead, chip: `프롬프트 ${nL}개`, go: 'legacy' }) : ''}
     </div>
     <h2 class="sec-title"><img src="${icon3d('books')}" alt="">분류별로 보기 <span class="n">전체 ${flat.length}개 · 실제 사례 ${nEx}개</span></h2>
     <div class="grid-cards">${state.data.categories.map((c) => bigCard({ tone: c.grp === 'gemini' ? 'pink' : 'sky', icon: CAT_ICON[c.id] || 'clipboard', num: GROUPS[c.grp] || '', title: c.label, desc: c.intro || '', chip: `${c.items.length}개`, go: 'all/' + c.id })).join('')}</div>`;

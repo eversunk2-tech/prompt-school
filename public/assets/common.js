@@ -101,7 +101,19 @@ export const COURSES = {
     ],
   },
   advanced: {
-    label: '심화과정', title: 'AI 조교를 설계하는 교사', icon: 'rocket', tone: 'peach',
+    label: '심화과정', title: '바로 따라 하는 제미나이 노트북', icon: 'rocket', tone: 'peach',
+    lead: '업무 두 가지와 수업 네 가지를 같은 네 단계(파악 → 묻기 → 메모 → 결과물)로 해 보는 150분',
+    modules: [
+      { key: 'S1', num: 'Ⅰ', label: '수학여행 업무 한 바퀴', icon: 'briefcase', time: '15:35', desc: '대화형 보고서 → 맞춤 채팅 → 안전요원 계획·계약서 → 수학여행 계획서' },
+      { key: 'S2', num: 'Ⅱ', label: '중입 배정 업무 한 바퀴', icon: 'school', time: '16:15', desc: '부장·담임 할 일 → 우선배정·재배정 → 담임 안내 2장 → 기초조사서·가정통신문' },
+      { key: 'S3', num: 'Ⅲ', label: '백워드 단원 설계', icon: 'bullseye', time: '16:50', desc: '질문 세 번: 바라는 결과 → 수행과제 → 차시 계획' },
+      { key: 'S4', num: 'Ⅳ', label: '‘!’ 소스 10개와 제미나이 수업 설계', icon: 'memo', time: '17:10', desc: '한 줄 프롬프트로 ‘!’ 소스 만들기 → 노트북 채팅 → 제미나이 지도안' },
+      { key: 'S5', num: 'Ⅴ', label: '제미나이 캔버스 학습용 웹앱', icon: 'laptop', time: '17:30', desc: '노트북을 붙여 복습 웹앱 만들기' },
+      { key: 'S6', num: 'Ⅵ', label: '학생용 튜터와 클래스룸 공유', icon: 'robot', time: '17:42', desc: '힌트만 주는 튜터, 퀴즈·오디오·동영상 공유' },
+    ],
+  },
+  legacy: {
+    label: '심화과정(이전판)', title: 'AI 조교를 설계하는 교사', icon: 'rocket', tone: 'peach',
     lead: '소스를 설계해 단원·학급·수업을 설계하는 150분',
     modules: [
       { key: 'A2', num: 'Ⅱ', label: '층위별 소스 구조', icon: 'card-index-dividers', time: '15:35', desc: '[기준]·[맥락]·[확장] 체크로 근거 범위 정하기' },
@@ -115,9 +127,11 @@ export const COURSES = {
     ],
   },
 };
-export const CAT_ICON = { basics: 'magnifying-glass-tilted-left', work: 'briefcase', saenggibu: 'bookmark-tabs', lesson: 'artist-palette', design: 'card-index-dividers', tutor: 'robot', gplan: 'memo', canvas: 'laptop', gems: 'gem-stone' };
+export const ADMIN_ONLY = ['legacy'];
+export const CAT_ICON = { trip: 'briefcase', jungip2: 'school', backward: 'bullseye', bang: 'memo', webapp: 'laptop', stutor: 'robot', basics: 'magnifying-glass-tilted-left', work: 'briefcase', saenggibu: 'bookmark-tabs', lesson: 'artist-palette', design: 'card-index-dividers', tutor: 'robot', gplan: 'memo', canvas: 'laptop', gems: 'gem-stone' };
 
-// course 값 → { course: 'basic'|'advanced', mod, order }
+// course 값 → { course: 'basic'|'advanced'|'legacy', mod, order }
+// legacy(모듈 키가 A로 시작) = 예전 심화과정. 관리자에게만 보인다.
 export function courseOf(it) {
   const [key, n] = String(it.course || '').split(':');
   if (!key) return null;

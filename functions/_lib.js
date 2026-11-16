@@ -1,3 +1,4 @@
+import { ADV } from './_adv.js'; // 관리자 전용 심화과정 프롬프트(tools/build_seed.py가 만듦)
 // 공통 도우미: 응답, 스키마 준비, 최초 데이터 채우기, 관리자 확인
 
 export function json(data, status = 200) {
@@ -83,7 +84,13 @@ export async function loadSeed(env, request) {
     const url = new URL('/data/seed.json', request.url);
     const res = env.ASSETS ? await env.ASSETS.fetch(url) : await fetch(url);
     if (!res.ok) return null;
-    return await res.json();
+    const seed = await res.json();
+    // 공개 seed.json에는 심화과정 프롬프트가 없다. 서버에만 있는 ADV를 같은 탭에 합쳐 DB에는 전부 넣는다.
+    for (const a of ADV.categories || []) {
+      const c = (seed.categories || []).find((x) => x.id === a.id);
+      if (c) c.items = [...(c.items || []), ...a.items].sort((x, y) => (x.sort || 0) - (y.sort || 0));
+    }
+    return seed;
   } catch (e) {
     return null;
   }

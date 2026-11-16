@@ -106,10 +106,20 @@ def main():
     version = int(ver_file.read_text().strip()) if ver_file.exists() else 1
     rm_file = SRC / 'REMOVE'  # 사이트 DB에서도 지울 예전 항목 아이디(한 줄에 하나)
     remove = [x.strip() for x in rm_file.read_text(encoding='utf-8').splitlines() if x.strip()] if rm_file.exists() else []
-    OUT.write_text(json.dumps({'version': version, 'remove': remove, 'categories': cats}, ensure_ascii=False, indent=1), encoding='utf-8')
+    # 관리자 전용 과정(심화 = 모듈 키가 A로 시작)의 프롬프트는 공개 seed.json에 넣지 않고
+    # 서버 쪽 모듈(functions/_adv.js)에만 둔다. 사이트 방문자는 이 파일을 받을 수 없다.
+    is_adv = lambda it: str(it.get('course') or '').startswith('A')
+    pub = [{**c, 'items': [it for it in c['items'] if not is_adv(it)]} for c in cats]
+    adv = [{'id': c['id'], 'items': [it for it in c['items'] if is_adv(it)]} for c in cats]
+    adv = [c for c in adv if c['items']]
+    OUT.write_text(json.dumps({'version': version, 'remove': remove, 'categories': pub}, ensure_ascii=False, indent=1), encoding='utf-8')
+    (ROOT / 'functions' / '_adv.js').write_text(
+        '// tools/build_seed.py가 만든 파일입니다. 직접 고치지 마세요.\n// 관리자에게만 보이는 심화과정 프롬프트(공개 seed.json에는 없음)\n'
+        'export const ADV = ' + json.dumps({'categories': adv}, ensure_ascii=False, indent=1) + ';\n', encoding='utf-8')
     ex = sum(1 for c in cats for it in c['items'] if it['kind'] == 'example')
     nc = sum(1 for c in cats for it in c['items'] if it.get('course'))
-    print(f'버전 {version}: {len(cats)}개 탭, {len(ids)}개 프롬프트(실제 사례 {ex}, 템플릿 {len(ids) - ex}, 연수 배치 {nc}) → {OUT.relative_to(ROOT)}')
+    na = sum(len(c['items']) for c in adv)
+    print(f'버전 {version}: {len(cats)}개 탭, {len(ids)}개 프롬프트(실제 사례 {ex}, 템플릿 {len(ids) - ex}, 연수 배치 {nc}, 관리자 전용 심화 {na}) → {OUT.relative_to(ROOT)}, functions/_adv.js')
 
 
 if __name__ == '__main__':

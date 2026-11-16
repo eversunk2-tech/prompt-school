@@ -82,10 +82,9 @@ export async function loadData() {
     const r = await fetch('/api/data', { cache: 'no-store', headers: key ? { 'x-admin-key': key } : {} });
     if (r.ok) return { data: await r.json(), live: true };
   } catch (e) { /* 아래로 */ }
-  // 오프라인 사본은 누구나 받을 수 있으므로 관리자 전용 과정(심화)의 차시 배치를 뺀다
+  // 오프라인 사본(seed.json)에는 관리자 전용 과정(심화)의 프롬프트가 들어 있지 않다
   const r2 = await fetch('/data/seed.json', { cache: 'no-store' });
   const data = await r2.json();
-  for (const c of data.categories || []) for (const it of c.items || []) if (String(it.course || '').charAt(0) === 'A') it.course = '';
   return { data: { ...data, admin: false }, live: false };
 }
 

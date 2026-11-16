@@ -110,6 +110,7 @@ export const COURSES = {
       { key: 'S4', num: 'Ⅳ', label: '‘!’ 소스 10개와 제미나이 수업 설계', icon: 'memo', time: '17:10', desc: '한 줄 프롬프트로 ‘!’ 소스 만들기 → 노트북 채팅 → 제미나이 지도안' },
       { key: 'S5', num: 'Ⅴ', label: '제미나이 캔버스 학습용 웹앱', icon: 'laptop', time: '17:30', desc: '노트북을 붙여 복습 웹앱 만들기' },
       { key: 'S6', num: 'Ⅵ', label: '학생용 튜터와 클래스룸 공유', icon: 'robot', time: '17:42', desc: '힌트만 주는 튜터, 퀴즈·오디오·동영상 공유' },
+      { key: 'S7', num: '+', label: '수업 설계 더하기', icon: 'light-bulb', time: '', desc: '우리 반 실태 한 장, 동료 교사 검토, 수준별 활동지, 수업 뒤 분석' },
     ],
   },
   legacy: {
@@ -128,7 +129,7 @@ export const COURSES = {
   },
 };
 export const ADMIN_ONLY = ['legacy'];
-export const CAT_ICON = { trip: 'briefcase', jungip2: 'school', backward: 'bullseye', bang: 'memo', webapp: 'laptop', stutor: 'robot', basics: 'magnifying-glass-tilted-left', work: 'briefcase', saenggibu: 'bookmark-tabs', lesson: 'artist-palette', design: 'card-index-dividers', tutor: 'robot', gplan: 'memo', canvas: 'laptop', gems: 'gem-stone' };
+export const CAT_ICON = { trip: 'briefcase', jungip2: 'school', backward: 'bullseye', bang: 'memo', webapp: 'laptop', stutor: 'robot', lplus: 'light-bulb', basics: 'magnifying-glass-tilted-left', work: 'briefcase', saenggibu: 'bookmark-tabs', lesson: 'artist-palette', design: 'card-index-dividers', tutor: 'robot', gplan: 'memo', canvas: 'laptop', gems: 'gem-stone' };
 
 // course 값 → { course: 'basic'|'advanced'|'legacy', mod, order }
 // legacy(모듈 키가 A로 시작) = 예전 심화과정. 관리자에게만 보인다.

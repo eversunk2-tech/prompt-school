@@ -102,15 +102,27 @@ export const COURSES = {
   },
   advanced: {
     label: '심화과정', title: '바로 따라 하는 제미나이 노트북', icon: 'rocket', tone: 'peach',
-    lead: '업무 두 가지와 수업 네 가지를 같은 네 단계(파악 → 묻기 → 메모 → 결과물)로 해 보는 150분',
+    lead: '업무 한 가지와 수업 네 가지를 구조화 프롬프트로 처음부터 끝까지 해 보는 150분',
     modules: [
-      { key: 'S1', num: 'Ⅰ', label: '수학여행 업무 한 바퀴', icon: 'briefcase', time: '15:35', desc: '대화형 보고서 → 맞춤 채팅 → 안전요원 계획·계약서 → 수학여행 계획서' },
-      { key: 'S2', num: 'Ⅱ', label: '중입 배정 업무 한 바퀴', icon: 'school', time: '16:15', desc: '부장·담임 할 일 → 우선배정·재배정 → 담임 안내 2장 → 기초조사서·가정통신문' },
-      { key: 'S3', num: 'Ⅲ', label: '백워드 단원 설계', icon: 'bullseye', time: '16:50', desc: '질문 세 번: 바라는 결과 → 수행과제 → 차시 계획' },
-      { key: 'S4', num: 'Ⅳ', label: '‘!’ 소스 10개와 제미나이 수업 설계', icon: 'memo', time: '17:10', desc: '한 줄 프롬프트로 ‘!’ 소스 만들기 → 노트북 채팅 → 제미나이 지도안' },
-      { key: 'S5', num: 'Ⅴ', label: '제미나이 캔버스 학습용 웹앱', icon: 'laptop', time: '17:30', desc: '노트북을 붙여 복습 웹앱 만들기' },
-      { key: 'S6', num: 'Ⅵ', label: '학생용 튜터와 클래스룸 공유', icon: 'robot', time: '17:42', desc: '힌트만 주는 튜터, 퀴즈·오디오·동영상 공유' },
-      { key: 'S7', num: '+', label: '수업 설계 더하기', icon: 'light-bulb', time: '', desc: '우리 반 실태 한 장, 동료 교사 검토, 수준별 활동지, 수업 뒤 분석' },
+      { key: 'S1', num: 'Ⅰ', label: '수학여행 업무 한 바퀴', icon: 'briefcase', time: '15:35', desc: '대화형 보고서 → 맞춤 채팅 → ‘!’ 메모 → 안전요원 운영 계획·계약서 → 수학여행 계획서' },
+      { key: 'S2', num: 'Ⅱ', label: '백워드 단원 설계', icon: 'bullseye', time: '16:15', desc: '바라는 결과 → 수행과제와 채점기준 → 차시 계획 → 동료 교사 검토' },
+      { key: 'S3', num: 'Ⅲ', label: '‘!’ 소스 10개와 제미나이 단계형 수업 설계', icon: 'memo', time: '16:45', desc: '‘!’ 소스 10개 → 노트북 채팅 → 질문 7개에 답하며 만드는 지도안 → Gem' },
+      { key: 'S4', num: 'Ⅳ', label: '제미나이 캔버스 학습용 웹앱', icon: 'laptop', time: '17:25', desc: '노트북을 붙인 복습 게임, 소크라테스식 학습 튜터 웹앱' },
+      { key: 'S5', num: 'Ⅴ', label: '학생용 튜터와 클래스룸 공유', icon: 'robot', time: '17:40', desc: '튜터 지침 10규칙과 역할 시험, 퀴즈·오디오·동영상 공유' },
+      { key: 'S9', num: '+', label: '더하기：중입 배정 업무와 수업 뒤 활용', icon: 'light-bulb', time: '', desc: '중입 배정 한 바퀴, 수준별 활동지, 수업 뒤 분석, 피드백 초안' },
+    ],
+  },
+  quick: {
+    label: '심화 빠른 판', title: '한 줄로 줄인 심화과정', icon: 'rocket', tone: 'peach',
+    lead: '한두 문장으로 줄인 프롬프트 모음(관리자 보관용)',
+    modules: [
+      { key: 'AQ1', num: 'Ⅰ', label: '수학여행 업무(한 줄)', icon: 'briefcase', time: '', desc: '' },
+      { key: 'AQ2', num: 'Ⅱ', label: '중입 배정 업무(한 줄)', icon: 'school', time: '', desc: '' },
+      { key: 'AQ3', num: 'Ⅲ', label: '백워드 단원 설계(한 줄)', icon: 'bullseye', time: '', desc: '' },
+      { key: 'AQ4', num: 'Ⅳ', label: '‘!’ 소스 10개와 제미나이(한 줄)', icon: 'memo', time: '', desc: '' },
+      { key: 'AQ5', num: 'Ⅴ', label: '캔버스 웹앱(한 줄)', icon: 'laptop', time: '', desc: '' },
+      { key: 'AQ6', num: 'Ⅵ', label: '학생용 튜터(한 줄)', icon: 'robot', time: '', desc: '' },
+      { key: 'AQ7', num: '+', label: '수업 설계 더하기(한 줄)', icon: 'light-bulb', time: '', desc: '' },
     ],
   },
   legacy: {
@@ -128,8 +140,8 @@ export const COURSES = {
     ],
   },
 };
-export const ADMIN_ONLY = ['legacy'];
-export const CAT_ICON = { trip: 'briefcase', jungip2: 'school', backward: 'bullseye', bang: 'memo', webapp: 'laptop', stutor: 'robot', lplus: 'light-bulb', basics: 'magnifying-glass-tilted-left', work: 'briefcase', saenggibu: 'bookmark-tabs', lesson: 'artist-palette', design: 'card-index-dividers', tutor: 'robot', gplan: 'memo', canvas: 'laptop', gems: 'gem-stone' };
+export const ADMIN_ONLY = ['legacy', 'quick'];
+export const CAT_ICON = { ptrip: 'briefcase', pback: 'bullseye', pbang: 'memo', pweb: 'laptop', ptutor: 'robot', pplus: 'light-bulb', quick: 'card-index-dividers', basics: 'magnifying-glass-tilted-left', work: 'briefcase', saenggibu: 'bookmark-tabs', lesson: 'artist-palette', design: 'card-index-dividers', tutor: 'robot', gplan: 'memo', canvas: 'laptop', gems: 'gem-stone' };
 
 // course 값 → { course: 'basic'|'advanced'|'legacy', mod, order }
 // legacy(모듈 키가 A로 시작) = 예전 심화과정. 관리자에게만 보인다.

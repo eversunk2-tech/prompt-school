@@ -82,7 +82,7 @@ let flat = [];   // [item, category]
 // ───────── 주소(#/basic/B3)와 상태 ─────────
 function readHash() {
   const [, c = '', s = ''] = decodeURIComponent(location.hash || '').split('/');
-  state.course = ['all', 'basic', 'advanced', 'legacy'].includes(c) ? c : 'all';
+  state.course = ['all', 'basic', 'advanced', 'legacy', 'quick'].includes(c) ? c : 'all';
   state.sel = s;
   if (ADMIN_ONLY.includes(state.course) && !state.admin) { state.course = 'all'; state.sel = ''; } // 예전 심화과정은 관리자만
 }
@@ -96,7 +96,7 @@ const itemsOfCat = (id) => flat.filter(([, c]) => c.id === id);
 
 // ───────── 사이드바 ─────────
 function renderSide() {
-  const top = [['all', ALL], ['basic', COURSES.basic], ['advanced', COURSES.advanced], ['legacy', COURSES.legacy]].filter(([id]) => !ADMIN_ONLY.includes(id) || state.admin);
+  const top = [['all', ALL], ['basic', COURSES.basic], ['advanced', COURSES.advanced], ['legacy', COURSES.legacy], ['quick', COURSES.quick]].filter(([id]) => !ADMIN_ONLY.includes(id) || state.admin);
   const html = top.map(([id, c]) => {
     const on = state.course === id;
     let sub = '';
@@ -170,6 +170,7 @@ function viewHome() {
   const nB = flat.filter(([it]) => courseOf(it)?.course === 'basic').length;
   const nA = flat.filter(([it]) => courseOf(it)?.course === 'advanced').length;
   const nL = flat.filter(([it]) => courseOf(it)?.course === 'legacy').length;
+  const nQ = flat.filter(([it]) => courseOf(it)?.course === 'quick').length;
   const nEx = flat.filter(([it]) => kindOf(it) === 'example').length;
   return `<section class="hero">
       <div>
@@ -194,6 +195,7 @@ function viewHome() {
       ${bigCard({ tone: 'mint', icon: 'seedling', num: '150분', title: '기본과정｜' + COURSES.basic.title, desc: COURSES.basic.lead, chip: `프롬프트 ${nB}개`, go: 'basic' })}
       ${bigCard({ tone: 'peach', icon: 'rocket', num: '150분', title: '심화과정｜' + COURSES.advanced.title, desc: COURSES.advanced.lead, chip: `프롬프트 ${nA}개`, go: 'advanced' })}
       ${state.admin ? bigCard({ tone: 'pink', icon: 'card-index-dividers', num: '보관', title: '심화과정(이전판)｜' + COURSES.legacy.title + ' (관리자만 보임)', desc: COURSES.legacy.lead, chip: `프롬프트 ${nL}개`, go: 'legacy' }) : ''}
+      ${state.admin ? bigCard({ tone: 'pink', icon: 'card-index-dividers', num: '보관', title: '심화 빠른 판｜' + COURSES.quick.title + ' (관리자만 보임)', desc: COURSES.quick.lead, chip: `프롬프트 ${nQ}개`, go: 'quick' }) : ''}
     </div>
     <h2 class="sec-title"><img src="${icon3d('books')}" alt="">분류별로 보기 <span class="n">전체 ${flat.length}개 · 실제 사례 ${nEx}개</span></h2>
     <div class="grid-cards">${state.data.categories.map((c) => bigCard({ tone: c.grp === 'gemini' ? 'pink' : 'sky', icon: CAT_ICON[c.id] || 'clipboard', num: GROUPS[c.grp] || '', title: c.label, desc: c.intro || '', chip: `${c.items.length}개`, go: 'all/' + c.id })).join('')}</div>`;

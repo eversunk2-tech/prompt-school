@@ -78,6 +78,8 @@ const KIND = { example: '실제 적용 프롬프트', template: '프롬프트 �
 const kindOf = (it) => (it.kind === 'example' ? 'example' : 'template');
 const state = { data: null, course: 'all', sel: '', kind: store('ps.kind') || 'example', q: '' };
 let flat = [];   // [item, category]
+const opened = new Set();   // 펼친 왼쪽 메뉴. 저장하지 않으므로 처음 접속하면 모두 접혀 있다
+let keepNav = false;        // 메뉴를 펼치며 이동할 때 모바일 메뉴 창을 닫지 않는다
 
 // ───────── 주소(#/basic/B3)와 상태 ─────────
 function readHash() {
@@ -99,14 +101,15 @@ function renderSide() {
   const top = [['all', ALL], ['basic', COURSES.basic], ['advanced', COURSES.advanced], ['legacy', COURSES.legacy], ['quick', COURSES.quick]].filter(([id]) => !ADMIN_ONLY.includes(id) || state.admin);
   const html = top.map(([id, c]) => {
     const on = state.course === id;
+    const open = opened.has(id);
     let sub = '';
-    if (on) {
+    if (open) {
       const list = id === 'all'
         ? state.data.categories.map((cat) => ({ key: cat.id, num: '', label: cat.label, n: cat.items.length }))
         : c.modules.map((m) => ({ key: m.key, num: m.num, label: m.label, n: itemsOfModule(m.key).length }));
       sub = `<ul class="subnav">${list.map((x) => `<li><button class="sub-btn" data-go="${id}/${x.key}" aria-current="${state.sel === x.key && !state.q}">${x.num ? `<span class="num">${x.num}</span>` : ''}<span>${esc(x.label)}</span><span class="n">${x.n}</span></button></li>`).join('')}</ul>`;
     }
-    return `<li class="tone-${c.tone}"><button class="nav-btn" data-go="${id}" aria-current="${on && !state.sel && !state.q}" aria-expanded="${on}"><span class="ic"><img src="${icon3d(c.icon)}" alt=""></span>${esc(c.label)}${SVG.chev}</button>${sub}</li>`;
+    return `<li class="tone-${c.tone}"><button class="nav-btn" data-toggle="${id}" aria-current="${on && !state.sel && !state.q}" aria-expanded="${open}"><span class="ic"><img src="${icon3d(c.icon)}" alt=""></span>${esc(c.label)}${SVG.chev}</button>${sub}</li>`;
   }).join('');
   $('#sidebar').innerHTML = `<p class="side-label">프롬프트 보기</p><ul class="nav">${html}</ul>
     <div class="side-card"><b>프롬프트 읽는 법</b>
@@ -258,15 +261,28 @@ function render() {
   if (state.q) main.innerHTML = viewSearch();
   else if (state.course === 'all') main.innerHTML = state.sel ? viewCat(state.sel) : viewHome();
   else main.innerHTML = state.sel ? viewModule(state.course, state.sel) : viewCourse(state.course);
+  if (keepNav) { keepNav = false; return; }
   document.body.classList.remove('nav-open');
   $('#menuBtn').setAttribute('aria-expanded', 'false');
 }
 
 // ───────── 이벤트 ─────────
 document.addEventListener('click', async (e) => {
+  const t = e.target.closest('[data-toggle]');
+  if (t) {   // 왼쪽 큰 메뉴: 누를 때마다 펼치고 접는다. 여러 개를 함께 펼쳐 둘 수 있다
+    const id = t.dataset.toggle;
+    if (opened.has(id)) { opened.delete(id); renderSide(); return; }
+    opened.add(id);
+    state.q = ''; $('#q').value = '';
+    keepNav = true;
+    if (location.hash === `#/${id}`) { renderSide(); keepNav = false; } else go(id);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
   const g = e.target.closest('[data-go]');
   if (g) {
     const [c, s] = g.dataset.go.split('/');
+    opened.add(c);
     state.q = ''; $('#q').value = '';
     go(c, s);
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -61,10 +61,12 @@ wk-jp-guide
 ex5-wk-jp-guide
 wk-jp-survey
 ex5-wk-jp-survey
+wk-jp-survey-s
 wk-jp-slides
 ex5-wk-jp-slides
 wk-jp-letter
 ex5-wk-jp-letter
+wk-jp-letter-s
 wk-jp-reader-check
 ex5-wk-jp-reader-check
 
@@ -311,6 +313,8 @@ p9-jp-q3
 p9-jp-guide
 p9-jp-survey
 p9-jp-letter
+p9-jp-survey-s
+p9-jp-letter-s
 p9-jp-check
 p9-level
 p9-quiz-analysis
